@@ -7,6 +7,8 @@ quality = { "high" : 1,
             "medium" : 0,
             "low" : -1 }
 
+compiled_rules = {}
+
 try:
     import yara
 except ImportError:
@@ -53,15 +55,15 @@ def get_yaramatches(fileinfo, args):
     return {"Yara (high)": matches_high, "Yara (medium)": matches_medium, "Yara (low)": matches_low}
 
 def yaramatches(filename, rulepath):
-    rulesets = []
     for file in dirwalker.get_files([rulepath]):
         try:
-            rulesets.append(yara.compile(file))
+            if file not in compiled_rules:
+                compiled_rules[file] = yara.compile(file)
         except:
             print("Error compiling yara rules file {}".format(file))
             pass
     matchgroups = []
-    for ruleset in rulesets:
+    for ruleset in compiled_rules.values():
         try:
             matchgroups.append(ruleset.match(filename))
         except:
