@@ -12,5 +12,5 @@ rule richheader{
 strings:
     $rich = "Rich"
 condition:
-    $rich in (128..300)
+    $rich in (128..256)
 }

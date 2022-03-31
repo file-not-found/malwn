@@ -12,7 +12,7 @@ compiled_rules = {}
 try:
     import yara
 except ImportError:
-    print("yara is needed (pip3 install yara)")
+    print("yara is needed (pip3 install yara-python)")
     exit(-1)
 
 def get_rulepath(fileformat, args):
@@ -25,11 +25,11 @@ def get_rulepath(fileformat, args):
     return None
 
 def get_yaramatches(fileinfo, args):
-    #if not args.yara and not args.Yara:
-    #    return None
+    if args.Yara:
+        return {}
     rulepath = get_rulepath(fileinfo.fileformat, args)
     if rulepath == None:
-        return None
+        return {}
     matchgroups = yaramatches(fileinfo.filename, rulepath)
     matches_high = []
     matches_medium = []
@@ -56,16 +56,19 @@ def get_yaramatches(fileinfo, args):
 
 def yaramatches(filename, rulepath):
     for file in dirwalker.get_files([rulepath]):
+        if rulepath not in compiled_rules:
+            compiled_rules[rulepath] = {}
         try:
-            if file not in compiled_rules:
-                compiled_rules[file] = yara.compile(file)
+            if file not in compiled_rules[rulepath]:
+                compiled_rules[rulepath][file] = yara.compile(file)
         except:
             print("Error compiling yara rules file {}".format(file))
             pass
     matchgroups = []
-    for ruleset in compiled_rules.values():
+    for ruleset in compiled_rules[rulepath].values():
         try:
-            matchgroups.append(ruleset.match(filename))
+            m = ruleset.match(filename)
+            matchgroups.append(m)
         except:
             pass
     return matchgroups
@@ -73,5 +76,5 @@ def yaramatches(filename, rulepath):
 def add_args(parser):
     parser.add_argument("-q", "--quality", default='medium', choices=['high', 'medium', 'low'], help="minimum rule quality")
     parser.add_argument("-y", "--yara", help="yara rules file")
-    #parser.add_argument("-Y", "--Yara", default=False, action="store_true", help="use default yara rules")
+    parser.add_argument("-Y", "--Yara", default=False, action="store_true", help="disable yara")
     return parser

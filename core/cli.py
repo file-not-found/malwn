@@ -12,7 +12,9 @@ def dict_to_str(d, csv, keys=True):
         t = ""
         for k, v in d.items():
             s = to_str(v, csv, keys)
-            t += "{:20}{}\n".format(k, s)
+            # skip empty values
+            if s != "":
+                t += "{:20}{}\n".format(k, s)
         return t.rstrip("\n")
     else:
         if csv:
@@ -49,4 +51,3 @@ def print_result(result, args):
 def debug_print(message, args):
     if args.debug:
         print("{} {}".format(datetime.datetime.now(), message))
-

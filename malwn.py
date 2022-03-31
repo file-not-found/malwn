@@ -9,6 +9,7 @@ import core.fileinfo as fileinfo
 import core.cli as cli
 import core.modules as modules
 
+
 def add_args(parser):
     parser.add_argument("-s", "--sort", action="store_true", default=False, help="sort results by timestamp")
     return parser
@@ -36,11 +37,14 @@ if __name__ == '__main__':
         cli.debug_print("got fileformat", args)
 
         matches = yaramatch.get_yaramatches(info, args)
+        rulenames = [str(item) for e in matches for item in matches[e]]
+        _modules = modules.get_modules(rulenames)
         cli.debug_print("got matches", args)
 
         r = {}
         r["fileinfo"] = info
         r["matches"] = matches
+        #r["modules"] = _modules #TODO: mark matches if module is available (e.g. *richheader)
         results.append(r)
     if args.sort:
         results = sorted(results, key=lambda x: x["fileinfo"].time)
