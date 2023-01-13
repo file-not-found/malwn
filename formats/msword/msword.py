@@ -19,11 +19,14 @@ class FileInfo(fileinfo.FileInfo):
 
     def __init__(self, filename):
         try:
-            self.zipfile = zipfile.ZipFile(filename)
-            if "[Content_Types].xml" in self.zipfile.namelist() and "docProps/app.xml" in self.zipfile.namelist() and "docProps/core.xml" in self.zipfile.namelist():
-                self.fileformat = __name__
-                self.time = self.get_modification_date()
-                super().__init__(filename)
+            with open(filename, "rb") as infile:
+                header = infile.read(4)
+            if header == b"\x50\x4b\x03\x04":
+                self.zipfile = zipfile.ZipFile(filename)
+                if "[Content_Types].xml" in self.zipfile.namelist() and "docProps/app.xml" in self.zipfile.namelist() and "docProps/core.xml" in self.zipfile.namelist():
+                    self.fileformat = __name__
+                    self.time = self.get_modification_date()
+                    super().__init__(filename)
         except:
             pass
 
