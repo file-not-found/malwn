@@ -75,7 +75,7 @@ class FileInfo(fileinfo.FileInfo):
     def get_info(self):
         filename = self.filename
         self.time = self.get_modification_date()
-        with exiftool.ExifTool() as et:
+        with exiftool.ExifToolHelper() as et:
             meta = et.get_metadata(filename)
             info = super().get_info()
             if "File:FileType" in meta:

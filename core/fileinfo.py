@@ -5,16 +5,22 @@ import sys
 import collections
 import math
 import os
+
+imports_ok = True
 # 
 try:
     import exiftool
 except ImportError:
+    imports_ok = False
     print("pyexiftool is needed for docx files (pip3 install pyexiftool)")
 
 try:
     import magic
 except ImportError:
+    imports_ok = False
     print("python-magic is needed (pip3 install python-magic)")
+
+if not imports_ok:
     exit(-1)
 
 formats = {}

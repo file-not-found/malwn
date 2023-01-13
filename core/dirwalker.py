@@ -2,21 +2,27 @@
 import os.path
 import os
 
-def get_files(paths, recursive=False):
+def get_files(paths, extensions=["",], recursive=False):
     for path in paths:
         if os.path.isdir(path):
             if recursive:
                 for r, d, f in os.walk(path):
                     for filename in f:
-                        yield os.path.relpath(os.path.join(r, filename))
+                        for extension in extensions:
+                            if filename.endswith(extension):
+                                yield os.path.relpath(os.path.join(r, filename))
             else:
                 for filename in os.listdir(path):
-                    yield os.path.relpath(os.path.join(path, filename))
+                    for extension in extensions:
+                        if filename.endswith(extension):
+                            yield os.path.relpath(os.path.join(path, filename))
         elif os.path.isfile(path):
-            yield os.path.relpath(path)
+            for extension in extensions:
+                if path.endswith(extension):
+                    yield os.path.relpath(path)
 
 def get_all_files(args):
-    return get_files(args.file, args.recursive)
+    return get_files(args.file, recursive=args.recursive)
 
 def add_args(parser):
     parser.add_argument("file", nargs='*', default='.')

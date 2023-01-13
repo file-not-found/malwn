@@ -15,22 +15,8 @@ except ImportError:
     print("yara is needed (pip3 install yara-python)")
     exit(-1)
 
-def get_rulepath(fileformat, args):
-    if args.yara and os.path.exists(args.yara):
-        return args.yara
-    else:
-        path = os.path.dirname(__file__) + "/../yara-rules/" + fileformat
-        if os.path.isdir(path):
-            return path
-    return None
-
 def get_yaramatches(fileinfo, args):
-    if args.Yara:
-        return {}
-    rulepath = get_rulepath(fileinfo.fileformat, args)
-    if rulepath == None:
-        return {}
-    matchgroups = yaramatches(fileinfo.filename, rulepath)
+    matchgroups = yaramatches(fileinfo.filename)
     matches_high = []
     matches_medium = []
     matches_low = []
@@ -54,18 +40,38 @@ def get_yaramatches(fileinfo, args):
                 matches_medium.append(x)
     return {"Yara (high)": matches_high, "Yara (medium)": matches_medium, "Yara (low)": matches_low}
 
-def yaramatches(filename, rulepath):
-    for file in dirwalker.get_files([rulepath]):
-        if rulepath not in compiled_rules:
-            compiled_rules[rulepath] = {}
+def compile_rules(folder, args):
+    global compiled_rules
+    if args.Yara:
+        return
+    if args.yara:
+        rulepath = args.yara
+    else:
+        rulepath = folder
+    if not os.path.exists(rulepath):
+        print("Invalid path to yara rules {}".format(rulepath))
+        return
+
+    for yarafile in dirwalker.get_files([rulepath], extensions=[".yar", ".yara"], recursive=True):
         try:
-            if file not in compiled_rules[rulepath]:
-                compiled_rules[rulepath][file] = yara.compile(file)
+            if yarafile not in compiled_rules:
+                binfile = yarafile.replace(".yara", ".yar") + "bin"
+                if os.path.exists(binfile) and os.stat(yarafile).st_mtime == os.stat(binfile).st_mtime:
+                    compiled_rules[yarafile] = yara.load(binfile)
+                else:
+                    st = os.stat(yarafile)
+                    atime = st.st_atime
+                    mtime = st.st_mtime
+                    compiled_rules[yarafile] = yara.compile(yarafile)
+                    compiled_rules[yarafile].save(binfile)
+                    os.utime(binfile, (st.st_atime, st.st_mtime))
         except:
-            print("Error compiling yara rules file {}".format(file))
+            print("Error compiling yara rules file {}".format(yarafile))
             pass
+
+def yaramatches(filename):
     matchgroups = []
-    for ruleset in compiled_rules[rulepath].values():
+    for ruleset in compiled_rules.values():
         try:
             m = ruleset.match(filename)
             matchgroups.append(m)
@@ -75,6 +81,6 @@ def yaramatches(filename, rulepath):
 
 def add_args(parser):
     parser.add_argument("-q", "--quality", default='medium', choices=['high', 'medium', 'low'], help="minimum rule quality")
-    parser.add_argument("-y", "--yara", help="yara rules file")
+    parser.add_argument("-y", "--yara", help="path to yara rules")
     parser.add_argument("-Y", "--Yara", default=False, action="store_true", help="disable yara")
     return parser

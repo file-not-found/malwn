@@ -1,5 +1,8 @@
 import datetime
 
+obsidian_refs = ['MD5', 'SHA1', 'SHA256']
+obsidian_code = ['Filename', 'Filetype', 'Compiler Info', 'PDB Filename', 'Export DLL Name']
+
 def add_args(parser):
    parser.add_argument("-c", "--csv", default=False, action="store_true", help="csv output")
    parser.add_argument("-l", "--long", default=False, action="store_true", help="long output")
@@ -14,6 +17,10 @@ def dict_to_str(d, csv, keys=True):
             s = to_str(v, csv, keys)
             # skip empty values
             if s != "":
+                if k in obsidian_refs:
+                    s = '[[' + s + ']]'
+                if k in obsidian_code:
+                    s = '`' + s + '`'
                 t += "{:20}{}\n".format(k, s)
         return t.rstrip("\n")
     else:

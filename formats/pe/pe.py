@@ -15,6 +15,8 @@ class FileInfo(fileinfo.FileInfo):
     compile_time = 0
     export_time = 0
     resource_time = 0
+    export_name = None
+    pdb_filename = None
 
     def __init__(self, filename):
         try:
@@ -28,6 +30,8 @@ class FileInfo(fileinfo.FileInfo):
             self.set_type_string(pe)
             #self.time = self.get_latest_time()
             self.time = self.format_time(self.get_compile_time(), ' ')
+            self.set_export_name(pe)
+            self.set_pdb_filename(pe)
             super().__init__(filename)
         except pefile.PEFormatError:
             return None
@@ -41,6 +45,13 @@ class FileInfo(fileinfo.FileInfo):
 
     def get_export_time(self):
         return self.export_time
+
+    def set_export_name(self, pe):
+        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size
+        if s > 0:
+            export_data = pe.parse_export_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].VirtualAddress, s)
+            if hasattr(export_data, 'name'):
+                self.export_name = export_data.name.decode("UTF-8")
 
     def set_resource_time(self, pe):
         s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[2].Size
@@ -118,6 +129,13 @@ class FileInfo(fileinfo.FileInfo):
     def format_time(self, ts, mark):
         return '{} UTC{}'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(ts)), mark)
 
+    def set_pdb_filename(self, pe):
+        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].Size
+        if s > 0:
+            dbg_data = pe.parse_debug_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].VirtualAddress, s)[0]
+            if hasattr(dbg_data, 'entry') and hasattr(dbg_data.entry, 'PdbFileName'):
+                self.pdb_filename = dbg_data.entry.PdbFileName.strip(b"\0").decode("UTF-8")
+
     def get_diec_output(self):
         import subprocess
         import json
@@ -142,13 +160,20 @@ class FileInfo(fileinfo.FileInfo):
     def get_info(self):
         info = super().get_info()
         info["Compile Timestamp"] = self.format_time(self.get_compile_time(), "")
-        export_time = self.get_export_time()
-        if export_time != 0:
-            info["Export Timestamp"] = self.format_time(export_time, "")
-        resource_time = self.get_resource_time()
-        if resource_time != 0:
-            info["Resource Timestamp"] = self.format_time(resource_time, "")
         diec = self.get_diec_output()
         if diec != None:
             info["Compiler Info"] = diec
+        if self.pdb_filename != None:
+            info["PDB Filename"] = self.pdb_filename
+
+        export_time = self.get_export_time()
+        if export_time != 0:
+            info["Export Timestamp"] = self.format_time(export_time, "")
+        if self.export_name != None:
+            info["Export DLL Name"] = self.export_name
+
+        resource_time = self.get_resource_time()
+        if resource_time != 0:
+            info["Resource Timestamp"] = self.format_time(resource_time, "")
         return info
+
