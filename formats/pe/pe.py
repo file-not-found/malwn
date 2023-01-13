@@ -132,9 +132,9 @@ class FileInfo(fileinfo.FileInfo):
     def set_pdb_filename(self, pe):
         s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].Size
         if s > 0:
-            dbg_data = pe.parse_debug_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].VirtualAddress, s)[0]
-            if hasattr(dbg_data, 'entry') and hasattr(dbg_data.entry, 'PdbFileName'):
-                self.pdb_filename = dbg_data.entry.PdbFileName.strip(b"\0").decode("UTF-8")
+            dbg_data = pe.parse_debug_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].VirtualAddress, s)
+            if dbg_data != None and hasattr(dbg_data[0], 'entry') and hasattr(dbg_data[0].entry, 'PdbFileName'):
+                self.pdb_filename = dbg_data[0].entry.PdbFileName.strip(b"\0").decode("UTF-8")
 
     def get_diec_output(self):
         import subprocess
