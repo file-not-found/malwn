@@ -17,19 +17,23 @@ from configparser import ConfigParser
 CONFIG =  os.path.dirname(os.path.realpath(__file__)) + '/config.ini'
 malwn_conf = {}
 
-def init_config():
+def init_config(reset=False):
     global malwn_conf
-    update = False
     config = ConfigParser()
     config.read(CONFIG)
-    if not 'malwn' in config:
+    if reset or not 'malwn' in config:
         config['malwn'] = {}
     if not 'yara_path' in config['malwn']:
         p = input('please enter path to yara rules: ')
         yara_path = os.path.abspath(os.path.expanduser(p))
         config['malwn']['yara_path'] = yara_path
-        update = True
-    if update:
+        reset = True
+    if not 'module_path' in config['malwn']:
+        p = input('please enter path to malwn modules: ')
+        module_path = os.path.abspath(os.path.expanduser(p))
+        config['malwn']['module_path'] = module_path
+        reset = True
+    if reset:
         with open(CONFIG, 'w') as configfile:
             config.write(configfile)
     malwn_conf = config['malwn']
@@ -54,10 +58,10 @@ def fileworker():
 def add_args(parser):
     parser.add_argument("-s", "--sort", action="store_true", default=False, help="sort results by timestamp")
     parser.add_argument("-t", "--threads", type=int, default=10, help="number of concurrent threads")
+    parser.add_argument("--reset", action="store_true", default=False, help="reset config file")
     return parser
 
 if __name__ == '__main__':
-    init_config()
 
     parser = ArgumentParser()
     parser = dirwalker.add_args(parser)
@@ -68,6 +72,8 @@ if __name__ == '__main__':
 
     parser = add_args(parser)
     args = parser.parse_args()
+
+    init_config(args.reset)
 
     cli.debug_print("compiling yara rules", args)
     yaramatch.compile_rules(malwn_conf["yara_path"], args)

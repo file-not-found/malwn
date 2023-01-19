@@ -18,12 +18,13 @@ Supports
 
 ### yara rules
 
-Yara rules should be placed in the folder `yara-rules/` for the related file type.
-Filename and rule names can be chosen freely.
+Upon first execution you can configure a path where `malwn` will look for all
+`.yar` and `.yara` file recursively.
 
 ### modules
 
-`malwn` can automatically execute modules if certain yara rules match. New modules
-can be created by creating a folder `modules/<yara_rule_name>/`. Here any number
-of modules can be created as `<module_name>/<module_name>.py`. These modules
-must have a `run` function which takes a filename as parameter and returns a string.
+`malwn` can automatically execute modules if certain yara rules match.
+The module folder can be configured upon first execution.
+A subfolder with the same name as the corresponding yara rule has to be created there.
+Any number of modules with the path `<module_name>/<module_name>.py` can be put inside this folder.
+The modules must have a `run` function which expects the filename as input parameter and which should return the result as a string.

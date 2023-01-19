@@ -1,16 +1,15 @@
 import os
+import sys
 import time
 import core.fileinfo as fileinfo
 
 try:
     import pefile
 except ImportError:
-    print("pefile is needed for PE32 files (pip3 install pefile)")
+    print("pefile is needed for PE32 files (pip3 install pefile)", file=sys.stderr)
     exit(-1)
 
 class FileInfo(fileinfo.FileInfo):
-    arch_string = ""
-    type_string = ""
     dot_net = False
     compile_time = 0
     export_time = 0
@@ -22,18 +21,22 @@ class FileInfo(fileinfo.FileInfo):
         try:
             pe = pefile.PE(filename, fast_load=True)
             self.fileformat = __name__
-            self.set_arch_string(pe)
+            self.set_fileformat(pe)
             self.set_compile_time(pe)
             self.set_export_time(pe)
             self.set_resource_time(pe)
             self.check_dot_net(pe)
-            self.set_type_string(pe)
+            self.set_filetype(pe)
             #self.time = self.get_latest_time()
-            self.time = self.format_time(self.get_compile_time(), ' ')
+            self.time = self.format_time(self.compile_time, ' ')
             self.set_export_name(pe)
             self.set_pdb_filename(pe)
+            del pe
             super().__init__(filename)
         except pefile.PEFormatError:
+            return None
+        except Exception as e:
+            print(e, file=sys.stderr)
             return None
 
     def set_export_time(self, pe):
@@ -63,17 +66,14 @@ class FileInfo(fileinfo.FileInfo):
     def get_resource_time(self):
         return self.resource_time
 
-    def set_arch_string(self, pe):
+    def set_fileformat(self, pe):
         m = pe.FILE_HEADER.Machine
         if m == 0x14c:
-            self.arch_string = "PE32"
+            self.fileformat = "PE32"
         elif m == 0x8664:
-            self.arch_string = "PE32+"
+            self.fileformat = "PE32+"
         else:
-            self.arch_string = "PE"
-
-    def get_arch_string(self):
-        return self.arch_string
+            self.fileformat = "PE"
 
     def check_dot_net(self, pe):
         if pe.OPTIONAL_HEADER.DATA_DIRECTORY[14].Size > 0 and pe.OPTIONAL_HEADER.DATA_DIRECTORY[14].VirtualAddress != 0:
@@ -82,7 +82,7 @@ class FileInfo(fileinfo.FileInfo):
     def is_dot_net(self):
         return self.dot_net
 
-    def set_type_string(self, pe):
+    def set_filetype(self, pe):
         c = pe.FILE_HEADER.Characteristics
         typ = "???"
         if c & 0x2000:
@@ -100,7 +100,7 @@ class FileInfo(fileinfo.FileInfo):
                 sub = "gui"
             elif s == 3:
                 sub = "console"
-        self.type_string = "{} ({})".format(typ,sub)
+        self.filetype = "{} ({})".format(typ,sub)
 
     def get_type_string(self):
         return self.type_string
@@ -148,32 +148,17 @@ class FileInfo(fileinfo.FileInfo):
         except json.decoder.JSONDecodeError:
             return None
 
-    def get_banner(self):
-        banner = []
-        banner.append("{:5}".format(self.get_arch_string()))
-        banner.append("{:18}".format(self.get_type_string()))
-        banner.append("{:24}".format(self.time))
-        banner.append("{:8} ".format(self.size))
-        banner.append(self.filename)
-        return banner
-
-    def get_info(self):
-        info = super().get_info()
-        info["Compile Timestamp"] = self.format_time(self.get_compile_time(), "")
+    def set_info(self):
+        super().set_info()
+        self.info["Compile Timestamp"] = self.format_time(self.get_compile_time(), "")
         diec = self.get_diec_output()
         if diec != None:
-            info["Compiler Info"] = diec
+            self.info["Compiler Info"] = diec
         if self.pdb_filename != None:
-            info["PDB Filename"] = self.pdb_filename
-
-        export_time = self.get_export_time()
-        if export_time != 0:
-            info["Export Timestamp"] = self.format_time(export_time, "")
+            self.info["PDB Filename"] = self.pdb_filename
+        if self.export_time != 0:
+            self.info["Export Timestamp"] = self.format_time(self.export_time, "")
         if self.export_name != None:
-            info["Export DLL Name"] = self.export_name
-
-        resource_time = self.get_resource_time()
-        if resource_time != 0:
-            info["Resource Timestamp"] = self.format_time(resource_time, "")
-        return info
-
+            self.info["Export DLL Name"] = self.export_name
+        if self.resource_time != 0:
+            self.info["Resource Timestamp"] = self.format_time(self.resource_time, "")

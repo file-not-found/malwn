@@ -1,7 +1,7 @@
 import datetime
 
 obsidian_refs = ['MD5', 'SHA1', 'SHA256']
-obsidian_code = ['Filename', 'Filetype', 'Compiler Info', 'PDB Filename', 'Export DLL Name']
+#obsidian_code = ['Filename', 'Filetype', 'Compiler Info', 'PDB Filename', 'Export DLL Name']
 
 def add_args(parser):
    parser.add_argument("-c", "--csv", default=False, action="store_true", help="csv output")
@@ -19,7 +19,8 @@ def dict_to_str(d, csv, keys=True):
             if s != "":
                 if k in obsidian_refs:
                     s = '[[' + s + ']]'
-                if k in obsidian_code:
+                #if k in obsidian_code:
+                else:
                     s = '`' + s + '`'
                 t += "{:20}{}\n".format(k, s)
         return t.rstrip("\n")
@@ -47,9 +48,12 @@ def to_str(x, csv=False, keys=True):
 
 def print_result(result, args):
     if args.long:
+        print(result["fileinfo"].filename)
         print(to_str(result["fileinfo"].get_info(), keys=True))
         if result["matches"]:
-            print(to_str(result["matches"], keys=True))
+            m = to_str(result["matches"], keys=True)
+            if m != "":
+                print(to_str(result["matches"], keys=True))
         print()
     else:
         values = [result["fileinfo"].get_banner(), result["matches"]]

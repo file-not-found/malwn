@@ -44,12 +44,9 @@ condition:
     all of them
 }
 
-rule cs_config_data{
+rule cobaltstrike_config{
 strings:
-    $ = { 2e 2f 2e 2f 2e 2c }
-    $ = { 69 6b 7a }
-    $ = { 7e 61 7d 7a }
-    $ = { 2e 26 2e 2d 2f 2e }
+    $ = "\x00\x00\x00\x1a\x00\x03\x00\x10GET\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1b\x00\x03\x00\x10POST\x00\x00" xor
 condition:
-    all of them
+    1 of them
 }
