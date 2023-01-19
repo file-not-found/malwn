@@ -2,16 +2,18 @@ import os
 import core.fileinfo as fileinfo
 import re
 
+imports_ok = True
 try:
     import exiftool
 except ImportError:
-    print("pyexiftool is needed for docx files (pip3 install pyexiftool)")
-    exit(-1)
-
+    print("pyexiftool is needed for docx files (pip3 install pyexiftool)", file=sys.stderr)
+    imports_ok = False
 try:
     import zipfile
 except ImportError:
-    print("zipfile is needed for docx files (pip3 install pyexiftool)")
+    print("zipfile is needed for docx files (pip3 install pyexiftool)", file=sys.stderr)
+    imports_ok = False
+if not imports_ok:
     exit(-1)
 
 class FileInfo(fileinfo.FileInfo):
@@ -27,35 +29,36 @@ class FileInfo(fileinfo.FileInfo):
                     self.fileformat = __name__
                     self.time = self.get_modification_date()
                     super().__init__(filename)
+                self.set_fileformat()
+                self.set_filetype()
         except:
             pass
 
-    def get_type(self):
+    def set_fileformat(self):
         with self.zipfile.open("[Content_Types].xml") as xmlfile:
             data = xmlfile.read()
         if b"document.macroEnabled.main+xml" in data:
-            return "DOCM"
+            self.fileformat = "DOCM"
         elif b"document.main+xml" in data:
-            return "DOCX"
+            self.fileformat = "DOCX"
         elif b"template.macroEnabledTemplate.main+xml" in data:
-            return "DOTM"
+            self.fileformat = "DOTM"
         elif b"template.main+xml" in data:
-            return "DOTX"
+            self.fileformat = "DOTX"
         else:
-            return "dunno"
+            self.fileformat = "dunno"
 
-    def get_application(self):
+    def set_filetype(self):
         with self.zipfile.open("docProps/app.xml") as xmlfile:
             data = xmlfile.read()
         m = re.search(b"<Application>(.*)</Application>", data)
         if m:
-            application = m.group(1).decode("utf-8").replace("Microsoft Office", "MS")
+            self.filetype = m.group(1).decode("utf-8").replace("Microsoft Office", "MS")
         else:
-            application = "unknown word"
+            self.filetype = "unknown word"
         m = re.search(b"<AppVersion>(.*)</AppVersion>", data)
         if m:
-            application += " (v{})".format(m.group(1).decode("utf-8").replace("0000", "0"))
-        return application
+            self.filetype += " (v{})".format(m.group(1).decode("utf-8").replace("0000", "0"))
 
     def get_modification_date(self):
         with self.zipfile.open("docProps/core.xml") as xmlfile:
@@ -66,42 +69,32 @@ class FileInfo(fileinfo.FileInfo):
         else:
             return ""
 
-    def get_banner(self):
-        banner = []
-        banner.append("{:5}".format(self.get_type()))
-        banner.append("{:18}".format(self.get_application()))
-        banner.append("{:24}".format(self.time))
-        banner.append("{:8} ".format(self.size))
-        banner.append(self.filename)
-        return banner
-
-    def get_info(self):
+    def set_info(self):
+        super().set_info()
         filename = self.filename
         self.time = self.get_modification_date()
         with exiftool.ExifToolHelper() as et:
             meta = et.get_metadata(filename)
-            info = super().get_info()
             if "File:FileType" in meta:
-                info["Type"] = meta["File:FileType"]
+                self.info["Type"] = meta["File:FileType"]
             if "XML:Application" in meta:
-                info["Application"] = meta["XML:Application"]
+                self.info["Application"] = meta["XML:Application"]
                 if "XML:AppVersion" in meta:
-                    info["Application"] += " (v{})".format(meta["XML:AppVersion"])
+                    self.info["Application"] += " (v{})".format(meta["XML:AppVersion"])
             if "XMP:Creator" in meta:
-                info["Creator"] = meta["XMP:Creator"]
+                self.info["Creator"] = meta["XMP:Creator"]
             if "XML:CreateDate" in meta:
-                info["Create Date"] = meta["XML:CreateDate"]
+                self.info["Create Date"] = meta["XML:CreateDate"]
             if "XML:LastModifiedBy" in meta:
-                info["Last Modified By"] = meta["XML:LastModifiedBy"]
-            info["Modify Date"] = self.time
+                self.info["Last Modified By"] = meta["XML:LastModifiedBy"]
+            self.info["Modify Date"] = self.time
             if "XML:Template" in meta:
-                info["Template"] = meta["XML:Template"]
+                self.info["Template"] = meta["XML:Template"]
             if "XML:TotalEditTime" in meta:
-                info["Total Edit Time"] = meta["XML:TotalEditTime"]
+                self.info["Total Edit Time"] = meta["XML:TotalEditTime"]
             if "XML:Pages" in meta:
-                info["Pages"] = meta["XML:Pages"]
+                self.info["Pages"] = meta["XML:Pages"]
             if "XML:Words" in meta:
-                info["Words"] = meta["XML:Words"]
+                self.info["Words"] = meta["XML:Words"]
             if "XML:Characters" in meta:
-                info["Characters"] = meta["XML:Characters"]
-            return info
+                self.info["Characters"] = meta["XML:Characters"]
