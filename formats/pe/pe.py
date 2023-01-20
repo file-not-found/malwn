@@ -39,10 +39,16 @@ class FileInfo(fileinfo.FileInfo):
             print(e, file=sys.stderr)
             return None
 
+    def get_data_directory_offset(self, pe, index):
+        dd = pe.OPTIONAL_HEADER.DATA_DIRECTORY
+        if len(dd) > index and hasattr(dd[index], 'Size') and hasattr(dd[index], 'VirtualAddress'):
+            return dd[index].VirtualAddress, dd[index].Size
+        return 0, 0
+
     def set_export_time(self, pe):
-        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size
-        if s > 0:
-            export_data = pe.parse_export_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].VirtualAddress, s)
+        va, s = self.get_data_directory_offset(pe, 0)
+        if s > 0 and va > 0:
+            export_data = pe.parse_export_directory(va, s)
             if hasattr(export_data, 'struct') and hasattr(export_data.struct, 'TimeDateStamp'):
                 self.export_time = export_data.struct.TimeDateStamp
 
@@ -50,16 +56,19 @@ class FileInfo(fileinfo.FileInfo):
         return self.export_time
 
     def set_export_name(self, pe):
-        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size
-        if s > 0:
-            export_data = pe.parse_export_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].VirtualAddress, s)
+        va, s = self.get_data_directory_offset(pe, 0)
+        if s > 0 and va > 0:
+            export_data = pe.parse_export_directory(va, s)
             if hasattr(export_data, 'name'):
-                self.export_name = export_data.name.decode("UTF-8")
+                try:
+                    self.export_name = export_data.name.decode("UTF-8")
+                except:
+                    return
 
     def set_resource_time(self, pe):
-        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[2].Size
-        if s > 0:
-            resource_data = pe.parse_resources_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[2].VirtualAddress, s)
+        va, s = self.get_data_directory_offset(pe, 2)
+        if s > 0 and va > 0:
+            resource_data = pe.parse_resources_directory(va, s)
             if hasattr(resource_data, 'struct') and hasattr(resource_data.struct, 'TimeDateStamp'):
                 self.resource_time = resource_data.struct.TimeDateStamp
 
@@ -76,7 +85,8 @@ class FileInfo(fileinfo.FileInfo):
             self.fileformat = "PE"
 
     def check_dot_net(self, pe):
-        if pe.OPTIONAL_HEADER.DATA_DIRECTORY[14].Size > 0 and pe.OPTIONAL_HEADER.DATA_DIRECTORY[14].VirtualAddress != 0:
+        va, s = self.get_data_directory_offset(pe, 14)
+        if s > 0 and va > 0:
             self.dot_net = True
 
     def is_dot_net(self):
@@ -130,11 +140,14 @@ class FileInfo(fileinfo.FileInfo):
         return '{} UTC{}'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(ts)), mark)
 
     def set_pdb_filename(self, pe):
-        s = pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].Size
-        if s > 0:
-            dbg_data = pe.parse_debug_directory(pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].VirtualAddress, s)
-            if dbg_data != None and hasattr(dbg_data[0], 'entry') and hasattr(dbg_data[0].entry, 'PdbFileName'):
-                self.pdb_filename = dbg_data[0].entry.PdbFileName.strip(b"\0").decode("UTF-8")
+        va, s = self.get_data_directory_offset(pe, 6)
+        if s > 0 and va > 0:
+            dbg_data = pe.parse_debug_directory(va, s)
+            if dbg_data != None and len(dbg_data) > 0 and hasattr(dbg_data[0], 'entry') and hasattr(dbg_data[0].entry, 'PdbFileName'):
+                try:
+                    self.pdb_filename = dbg_data[0].entry.PdbFileName.strip(b"\0").decode("UTF-8")
+                except:
+                    self.pdb_filename = None
 
     def get_diec_output(self):
         import subprocess

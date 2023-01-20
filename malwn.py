@@ -14,7 +14,8 @@ import core.modules as modules
 
 from configparser import ConfigParser
 
-CONFIG =  os.path.dirname(os.path.realpath(__file__)) + '/config.ini'
+MALWN_PATH = os.path.dirname(os.path.realpath(__file__))
+CONFIG =  MALWN_PATH + '/config.ini'
 malwn_conf = {}
 
 def init_config(reset=False):
@@ -24,12 +25,18 @@ def init_config(reset=False):
     if reset or not 'malwn' in config:
         config['malwn'] = {}
     if not 'yara_path' in config['malwn']:
-        p = input('please enter path to yara rules: ')
+        default = MALWN_PATH + "/yara-rules/"
+        p = input(f'please enter path to yara rules [{default}]: ')
+        if p == "":
+            p = default
         yara_path = os.path.abspath(os.path.expanduser(p))
         config['malwn']['yara_path'] = yara_path
         reset = True
     if not 'module_path' in config['malwn']:
-        p = input('please enter path to malwn modules: ')
+        default = MALWN_PATH + "/modules/"
+        p = input(f'please enter path to malwn modules [{default}]: ')
+        if p == "":
+            p = default
         module_path = os.path.abspath(os.path.expanduser(p))
         config['malwn']['module_path'] = module_path
         reset = True
