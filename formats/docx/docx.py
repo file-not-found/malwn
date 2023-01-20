@@ -1,6 +1,7 @@
 import os
 import core.fileinfo as fileinfo
 import re
+import sys
 
 imports_ok = True
 try:
