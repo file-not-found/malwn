@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os.path
 import os
+import sys
 import core.dirwalker as dirwalker
 
 quality = { "high" : 1,
@@ -12,7 +13,7 @@ compiled_rules = {}
 try:
     import yara
 except ImportError:
-    print("yara is needed (pip3 install yara-python)")
+    print("yara is needed (pip3 install yara-python)", file=sys.stderr)
     exit(-1)
 
 def get_yaramatches(fileinfo, args):
@@ -49,7 +50,7 @@ def compile_rules(folder, args):
     else:
         rulepath = folder
     if not os.path.exists(rulepath):
-        print("Invalid path to yara rules {}".format(rulepath))
+        print("Invalid path to yara rules {}".format(rulepath), file=sys.stderr)
         return
 
     for yarafile in dirwalker.get_files([rulepath], extensions=[".yar", ".yara"], recursive=True):
@@ -65,8 +66,8 @@ def compile_rules(folder, args):
                     compiled_rules[yarafile] = yara.compile(yarafile)
                     compiled_rules[yarafile].save(binfile)
                     os.utime(binfile, (st.st_atime, st.st_mtime))
-        except:
-            print("Error compiling yara rules file {}".format(yarafile))
+        except Exception as e:
+            print(f"Error compiling yara rules file: {e}", file=sys.stderr)
             pass
 
 def yaramatches(filename):
