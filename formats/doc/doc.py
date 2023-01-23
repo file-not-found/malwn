@@ -40,23 +40,25 @@ class FileInfo(fileinfo.FileInfo):
             self.fileformat = self.metadata['File:FileType']
 
     def set_filetype(self):
-        if 'FlashPix:CompObjUserType' in self.metadata:
+        if 'FlashPix:CompObjUserType' in self.metadata and self.metadata['FlashPix:CompObjUserType'] != '':
             self.filetype = self.metadata['FlashPix:CompObjUserType'].replace("Microsoft Word", "MS Word").replace(" Document", "")
         else:
             self.filetype = self.magic
 
     def set_modification_date(self):
-        if 'File:FileModifyDate' in self.metadata:
-            self.time = self.format_datetime(self.metadata['File:FileModifyDate'])
+        if 'FlashPix:ModifyDate' in self.metadata:
+            self.time = self.format_datetime(self.metadata['FlashPix:ModifyDate'])
 
     def format_datetime(self, t):
         if "+" in t:
             offset = t.split("+")[1].replace(":", "")
             t = t.split("+")[0] + "+" + offset
             ts = datetime.datetime.strptime(t, "%Y:%m:%d %H:%M:%S%z")
+            t = time.strftime("%Y-%m-%d %H:%M:%S UTC",ts.utctimetuple())
         else:
             ts = datetime.datetime.strptime(t, "%Y:%m:%d %H:%M:%S")
-        return time.strftime("%Y-%m-%d %H:%M:%S UTC",ts.utctimetuple())
+            t = time.strftime("%Y-%m-%d %H:%M:%S",ts.utctimetuple())
+        return t
 
     def set_info(self):
         super().set_info()

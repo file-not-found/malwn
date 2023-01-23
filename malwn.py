@@ -51,14 +51,13 @@ def fileworker():
         if not info:
             break;
         matches = yaramatch.get_yaramatches(info, args)
-        rulenames = [str(item) for e in matches for item in matches[e]]
-        _modules = modules.get_modules(rulenames)
         cli.debug_print("got matches", args)
+        rulenames = [str(item) for e in matches for item in matches[e]]
 
         r = {}
         r["fileinfo"] = info
         r["matches"] = matches
-        #r["modules"] = _modules #TODO: mark matches if module is available (e.g. *richheader)
+        r["modules"] = modules.get_compatible_modules(rulenames)
         results.append(r)
         filequeue.task_done()
 
@@ -84,6 +83,7 @@ if __name__ == '__main__':
 
     cli.debug_print("compiling yara rules", args)
     yaramatch.compile_rules(malwn_conf["yara_path"], args)
+    modules.import_modules(malwn_conf["module_path"])
 
     filequeue = queue.Queue()
 
@@ -118,4 +118,4 @@ if __name__ == '__main__':
         results = sorted(results, key=lambda x: x["fileinfo"].time)
     for r in results:
         cli.print_result(r, args)
-        modules.run(r, args)
+        modules.run(r["fileinfo"].filename, r["modules"], args)
