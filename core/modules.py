@@ -19,8 +19,9 @@ def import_modules(folder):
                 if rulename not in modules:
                     modules[rulename] = []
                 for modulename in os.listdir(folder + "/" + rulename):
-                    if os.path.isdir(folder + "/" + rulename + "/" + modulename):
-                        sys.path.append(os.path.abspath(folder + "/" + rulename + "/" + modulename))
+                    if modulename.endswith(".py"):
+                        modulename = modulename[:-3]
+                        sys.path.append(os.path.abspath(folder + "/" + rulename ))
                         modules[rulename].append(__import__(modulename))
 
 def get_compatible_modules(rulenames):

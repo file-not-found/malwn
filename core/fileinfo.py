@@ -82,10 +82,11 @@ class FileInfo:
         return self.info
 
 def load_modules(path, modules):
-    for d in os.listdir(path):
-        if os.path.isdir(path + "/" + d):
-            sys.path.append(os.path.abspath(path + "/" + d))
-            modules[d] = __import__(d)
+    for _format in os.listdir(path):
+        if _format.endswith(".py"):
+            _format = _format[:-3]
+            sys.path.append(os.path.abspath(path))
+            modules[_format] = __import__(_format)
 
 def get_fileinfo(filename, args):
     global formats
