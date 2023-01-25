@@ -6,6 +6,8 @@ import collections
 import math
 import os
 
+import core.loader as loader
+
 import_error = False
 try:
     import magic
@@ -15,7 +17,7 @@ except ImportError as e:
 if import_error:
     exit(-1)
 
-formats = {}
+formats = []
 
 def add_args(parser):
    parser.add_argument("-a", "--all", default=False, action="store_true", help="analyze all files")
@@ -82,21 +84,13 @@ class FileInfo:
         self.set_info()
         return self.info
 
-def load_modules(path, modules):
-    for _format in os.listdir(path):
-        if _format.endswith(".py"):
-            _format = _format[:-3]
-            sys.path.append(os.path.abspath(path))
-            modules[_format] = __import__(_format)
-
 def get_fileinfo(filename, args):
     global formats
-    if formats == {}:
+    if formats == []:
         path = os.path.dirname(__file__) + "/../formats/"
-        load_modules(path, formats)
+        formats = loader.import_all(path)
     for f in formats:
-        m = formats[f]
-        fileinfo = m.FileInfo(filename)
+        fileinfo = f.FileInfo(filename)
         if fileinfo.fileformat:
             return fileinfo
     if args.all:

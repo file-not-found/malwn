@@ -1,6 +1,8 @@
 import os.path
 import sys
 
+import core.loader as loader
+
 modules = {}
 
 def add_args(parser):
@@ -10,19 +12,11 @@ def add_args(parser):
 
 def import_modules(folder):
     global modules
-    if not os.path.exists(folder):
-        print("Invalid path to malwn modules {}".format(folder))
-        return
     if os.path.isdir(folder):
         for rulename in os.listdir(folder):
-            if os.path.isdir(folder + "/" + rulename):
-                if rulename not in modules:
-                    modules[rulename] = []
-                for modulename in os.listdir(folder + "/" + rulename):
-                    if modulename.endswith(".py"):
-                        modulename = modulename[:-3]
-                        sys.path.append(os.path.abspath(folder + "/" + rulename ))
-                        modules[rulename].append(__import__(modulename))
+            p = folder + "/" + rulename
+            if os.path.isdir(p):
+                modules[rulename] = loader.import_all(p)
 
 def get_compatible_modules(rulenames):
     global modules
