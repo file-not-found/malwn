@@ -4,17 +4,21 @@ import os
 import sys
 import core.dirwalker as dirwalker
 
+import_error = False
+try:
+    import yara
+except ImportError as e:
+    print(f"ImportError: {__file__}: {e} (pip3 install yara-python)", file=sys.stderr)
+    import_error = True
+if import_error:
+    exit(-1)
+
 quality = { "high" : 1,
             "medium" : 0,
             "low" : -1 }
 
 compiled_rules = {}
 
-try:
-    import yara
-except ImportError:
-    print("yara is needed (pip3 install yara-python)", file=sys.stderr)
-    exit(-1)
 
 def get_yaramatches(fileinfo, args):
     matchgroups = yaramatches(fileinfo.filename)

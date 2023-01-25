@@ -1,20 +1,17 @@
 import os
-import core.fileinfo as fileinfo
 import re
 import sys
+import zipfile
 
-imports_ok = True
+import core.fileinfo as fileinfo
+
+import_error = False
 try:
     import exiftool
-except ImportError:
-    print("pyexiftool is needed for docx files (pip3 install pyexiftool)", file=sys.stderr)
-    imports_ok = False
-try:
-    import zipfile
-except ImportError:
-    print("zipfile is needed for docx files (pip3 install pyexiftool)", file=sys.stderr)
-    imports_ok = False
-if not imports_ok:
+except ImportError as e:
+    print(f"ImportError: {__file__}: {e} (pip3 install pyexiftool)", file=sys.stderr)
+    import_error = True
+if import_error:
     exit(-1)
 
 class FileInfo(fileinfo.FileInfo):

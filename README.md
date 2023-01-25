@@ -14,6 +14,10 @@ Supports
     malwn -M <filename>     run all matching modules
     malwn -h                show help
 
+## requirements
+
+`yara-python` is needed. In Ubuntu the version from the Ubuntu repositories works better.
+
 ## extend malwn
 
 ### yara rules
@@ -25,6 +29,7 @@ Upon first execution you can configure a path where `malwn` will look for all
 
 `malwn` can automatically execute modules if certain yara rules match.
 The module folder can be configured upon first execution.
+
 A subfolder with the same name as the corresponding yara rule has to be created there.
 Any number of modules can be put inside this folder.
 These modules must have a `run` function which expects the filename as input parameter and which should return the result as a string.

@@ -6,12 +6,13 @@ import collections
 import math
 import os
 
-imports_ok = True
-
+import_error = False
 try:
     import magic
-except ImportError:
-    print("python-magic is needed (pip3 install python-magic)", file=sys.stderr)
+except ImportError as e:
+    print(f"ImportError: {__file__}: {e} (pip3 install python-magic)", file=sys.stderr)
+    import_error = True
+if import_error:
     exit(-1)
 
 formats = {}

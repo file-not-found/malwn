@@ -3,11 +3,15 @@ import sys
 import time
 import core.fileinfo as fileinfo
 
+import_error = False
 try:
     import pefile
-except ImportError:
-    print("pefile is needed for PE32 files (pip3 install pefile)", file=sys.stderr)
+except ImportError as e:
+    print(f"ImportError: {__file__}: {e} (pip3 install pefile)", file=sys.stderr)
+    import_error = True
+if import_error:
     exit(-1)
+
 
 class FileInfo(fileinfo.FileInfo):
     dot_net = False
