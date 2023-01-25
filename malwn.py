@@ -69,8 +69,8 @@ def add_args(parser):
 
 if __name__ == '__main__':
 
-    fileinfo.init_formats(os.path.dirname(__file__) + "/formats/")
-    cli.init_formats(os.path.dirname(__file__) + "/output/")
+    fileinfo.init_formats(MALWN_PATH + "/formats/")
+    cli.init_formats(MALWN_PATH + "/output/")
 
     parser = ArgumentParser()
     parser = dirwalker.add_args(parser)
