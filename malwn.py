@@ -56,7 +56,7 @@ def fileworker():
 
         r = {}
         r["fileinfo"] = info
-        r["matches"] = matches
+        r["yaramatches"] = matches
         r["modules"] = modules.get_compatible_modules(rulenames)
         results.append(r)
         filequeue.task_done()
@@ -68,6 +68,9 @@ def add_args(parser):
     return parser
 
 if __name__ == '__main__':
+
+    fileinfo.init_formats(os.path.dirname(__file__) + "/formats/")
+    cli.init_formats(os.path.dirname(__file__) + "/output/")
 
     parser = ArgumentParser()
     parser = dirwalker.add_args(parser)
@@ -82,8 +85,8 @@ if __name__ == '__main__':
     init_config(args.reset)
 
     cli.debug_print("compiling yara rules", args)
-    yaramatch.compile_rules(malwn_conf["yara_path"], args)
-    modules.import_modules(malwn_conf["module_path"])
+    yaramatch.init_rules(malwn_conf["yara_path"], args)
+    modules.init_modules(malwn_conf["module_path"])
 
     filequeue = queue.Queue()
 

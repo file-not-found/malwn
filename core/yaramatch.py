@@ -45,7 +45,7 @@ def get_yaramatches(fileinfo, args):
                 matches_medium.append(x)
     return {"Yara (high)": matches_high, "Yara (medium)": matches_medium, "Yara (low)": matches_low}
 
-def compile_rules(folder, args):
+def init_rules(folder, args):
     global compiled_rules
     if args.Yara:
         return

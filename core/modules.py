@@ -10,7 +10,7 @@ def add_args(parser):
     parser.add_argument("-m", "--module", help="module to run")
     return parser
 
-def import_modules(folder):
+def init_modules(folder):
     global modules
     if os.path.isdir(folder):
         for rulename in os.listdir(folder):

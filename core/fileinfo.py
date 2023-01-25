@@ -84,11 +84,13 @@ class FileInfo:
         self.set_info()
         return self.info
 
-def get_fileinfo(filename, args):
+def init_formats(path):
     global formats
     if formats == []:
-        path = os.path.dirname(__file__) + "/../formats/"
         formats = loader.import_all(path)
+
+def get_fileinfo(filename, args):
+    global formats
     for f in formats:
         fileinfo = f.FileInfo(filename)
         if fileinfo.fileformat:
