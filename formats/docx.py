@@ -43,17 +43,21 @@ class FileInfo(fileinfo.FileInfo):
             self.fileformat = "DOTM"
         elif b"template.main+xml" in data:
             self.fileformat = "DOTX"
+        elif b"application/vnd.ms-excel.sheet.macroEnabled" in data:
+            self.fileformat = "XLSM"
         else:
-            self.fileformat = "dunno"
+            self.fileformat = "UNKN"
 
     def set_filetype(self):
         with self.zipfile.open("docProps/app.xml") as xmlfile:
             data = xmlfile.read()
         m = re.search(b"<Application>(.*)</Application>", data)
         if m:
-            self.filetype = m.group(1).decode("utf-8").replace("Microsoft Office", "MS")
+            self.filetype = m.group(1).decode("utf-8")
         else:
             self.filetype = "unknown word"
+        self.filetype = self.filetype.replace("Microsoft", "MS")
+        self.filetype = self.filetype.replace(" Office", "")
         m = re.search(b"<AppVersion>(.*)</AppVersion>", data)
         if m:
             self.filetype += " (v{})".format(m.group(1).decode("utf-8").replace("0000", "0"))
