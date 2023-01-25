@@ -1,6 +1,12 @@
-import os
+import sys
+import subprocess
 
 def run(filename):
-    outfile = filename + ".olevba"
-    os.system("olevba {} 2>/dev/null > {}".format(filename, outfile))
-    return "output saved as {}".format(outfile)
+    try:
+        comp = subprocess.run(["olevba", filename], capture_output=True)
+        with open(filename + ".olevba", "wb") as outfile:
+            outfile.write(comp.stdout)
+        return "output saved as {}".format(filename + ".olevba")
+    except FileNotFoundError as e:
+        print(e, file=sys.stderr)
+        return None
