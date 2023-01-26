@@ -38,11 +38,11 @@ def get_yaramatches(fileinfo, args):
             else:
                 match_quality = quality["medium"]
             if match_quality >= quality["high"] and filter_quality <= quality["high"]:
-                matches_high.append(x)
+                matches_high.append(str(x))
             elif match_quality <= quality["low"] and filter_quality <= quality["low"]:
-                matches_low.append(x)
+                matches_low.append(str(x))
             elif match_quality == quality["medium"] and filter_quality <= quality["medium"]:
-                matches_medium.append(x)
+                matches_medium.append(str(x))
     return {"Yara (high)": matches_high, "Yara (medium)": matches_medium, "Yara (low)": matches_low}
 
 def init_rules(folder, args):

@@ -52,4 +52,5 @@ def run(filename):
         port = get_port(data[start + 6:], key)
         pubkey = hexlify(get_pubkey(data[start + 6:], key)).decode("utf-8")
         if url and port and pubkey:
-            return "\nURL:    {}\nPORT:   {}\nPUBKEY: {}\n".format(url, port, pubkey)
+            #return "\nURL:    {}\nPORT:   {}\nPUBKEY: {}\n".format(url, port, pubkey)
+            return {"C2 URL":url, "C2 Port": port, "C2 Public Key": pubkey}

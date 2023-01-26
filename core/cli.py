@@ -10,22 +10,23 @@ def init_formats(path):
 
 def add_args(parser):
     global formats
-    parser.add_argument("-o", "--output", default='', choices=['default', ]+[ x.__name__ for x in formats], help="output format")
+    parser.add_argument("-o", "--output", default='', choices=[x.__name__ for x in formats], help="output format")
     parser.add_argument("-l", "--long", default=False, action="store_true", help="long output (uses default output from config)")
     parser.add_argument("--debug", default=False, action="store_true", help="print debug messages")
     #TODO: parser.add_argument("--onlyhits", default=False, action="store_true", help="only print files with yara matches")
     return parser
 
-def print_result(result, args):
+def print_results(results, default_output, args):
     if args.long:
-        args.output = 'raw'
+        args.output = default_output
     if args.output != '':
         global formats
         for f in formats:
             if f.__name__ == args.output:
-                f.print_result(result)
+                f.print_results(results)
     else:
-        print(" ".join(result["fileinfo"].get_banner()) + " " + " ".join([str(m) for matches in result["yaramatches"].values() for m in matches]))
+        for f in results:
+            print(results[f]["banner"] + "  " + f + "  " + " ".join([str(m) for matches in results[f]["yaramatches"].values() for m in matches]))
 
 def debug_print(message, args):
     if args.debug:

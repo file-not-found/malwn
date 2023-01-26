@@ -40,6 +40,10 @@ def init_config(reset=False):
         module_path = os.path.abspath(os.path.expanduser(p))
         config['malwn']['module_path'] = module_path
         reset = True
+    if not 'default_output' in config['malwn']:
+        p = input(f'please enter default output format: ')
+        config['malwn']['default_output'] = p
+        reset = True
     if reset:
         with open(CONFIG, 'w') as configfile:
             config.write(configfile)
@@ -47,18 +51,28 @@ def init_config(reset=False):
 
 def fileworker():
     while True:
-        info = filequeue.get()
-        if not info:
+        file = filequeue.get()
+        if not file:
+            filequeue.task_done()
             break;
+        cli.debug_print("processing file {}".format(file), args)
+
+        info = fileinfo.get_fileinfo(file, args)
+        if info == None:
+            filequeue.task_done()
+            continue
+        cli.debug_print("got fileformat", args)
         matches = yaramatch.get_yaramatches(info, args)
         cli.debug_print("got matches", args)
         rulenames = [str(item) for e in matches for item in matches[e]]
 
-        r = {}
-        r["fileinfo"] = info
-        r["yaramatches"] = matches
-        r["modules"] = modules.get_compatible_modules(rulenames)
-        results.append(r)
+        compatible_modules = modules.get_compatible_modules(rulenames)
+        modinfo = modules.run(info, compatible_modules, args)
+        results[file] = {}
+        results[file]["banner"] = info.get_banner()
+        results[file]["fileinfo"] = info.get_info()
+        results[file]["yaramatches"] = matches
+        results[file]["modules"] = modinfo
         filequeue.task_done()
 
 def add_args(parser):
@@ -93,22 +107,16 @@ if __name__ == '__main__':
     for file in dirwalker.get_all_files(args):
         if not os.path.isfile(file):
             continue
-        cli.debug_print("processing file {}".format(file), args)
+        filequeue.put(file)
 
-        info = fileinfo.get_fileinfo(file, args)
-        if info == None:
-            continue
-        cli.debug_print("got fileformat", args)
-        filequeue.put(info)
-
+    cli.debug_print("starting threads", args)
     threads = []
-    results = []
+    results = {}
     for i in range(args.threads):
         t = threading.Thread(target=fileworker)
         t.start()
         threads.append(t)
 
-    cli.debug_print("threads started", args)
     filequeue.join()
     cli.debug_print("filequeue finished", args)
     for i in threads:
@@ -118,7 +126,5 @@ if __name__ == '__main__':
     cli.debug_print("threads stopped", args)
 
     if args.sort:
-        results = sorted(results, key=lambda x: x["fileinfo"].time)
-    for r in results:
-        cli.print_result(r, args)
-        modules.run(r["fileinfo"].filename, r["modules"], args)
+        results = dict(sorted(results.items(), key=lambda x: x[1]["banner"][25:]))
+    cli.print_results(results, malwn_conf["default_output"], args)

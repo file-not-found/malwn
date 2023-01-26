@@ -26,10 +26,14 @@ def get_compatible_modules(rulenames):
             compatible_modules[r] = modules[r]
     return compatible_modules
 
-def run(filename, compatible_modules, args):
+def run(fileinfo, compatible_modules, args):
+    results = {}
+    filename = fileinfo.filename
     for r in compatible_modules.keys():
         if args.allmodules or (args.module and args.module.split("/")[0] == r):
             for module in modules[r]:
+                if r not in results:
+                    results[r] = {}
                 if args.allmodules or not "/" in args.module or args.module.split("/")[1] == module.__name__:
-                    result = module.run(filename)
-                    print(" ### {} module: {}".format(module.__name__, result))
+                    results[r][module.__name__] = module.run(filename)
+    return results

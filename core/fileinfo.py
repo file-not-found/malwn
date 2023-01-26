@@ -55,16 +55,13 @@ class FileInfo:
         return e
 
     def get_banner(self):
-        banner = []
-        banner.append("{:5}".format(self.fileformat))
         if self.time and self.filetype:
-            banner.append("{:18}".format(self.filetype[:18]))
-            banner.append("{:24}".format(self.time))
+            banner = "{:6}".format(self.fileformat)
+            banner += "{:19}".format(self.filetype)
+            banner += "{:24}".format(self.time)
         else:
-            banner.append("{:42}".format(self.magic.split(",")[0][:42]))
-            banner.append("")
-        banner.append("{:8} ".format(self.size))
-        banner.append(self.filename)
+            banner = "      {:43}".format(self.magic.split(",")[0][:42])
+        banner += "{:9}".format(self.size)
         return banner
 
     def set_info(self):
