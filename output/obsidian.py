@@ -1,5 +1,5 @@
 
-obsidian_refs = ['MD5', 'SHA1', 'SHA256']
+obsidian_refs = ['MD5', 'SHA1', 'SHA256', 'Source']
 #obsidian_code = ['Filename', 'Filetype', 'Compiler Info', 'PDB Filename', 'Export DLL Name']
 
 def dict_to_str(d, keys=True):
@@ -47,4 +47,6 @@ def print_results(results):
                     if m != "":
                         #print(f"**{rule}.{mod}**")
                         print(m)
+        print("## vt")
+        print(to_str(results[f]["vtinfo"], keys=True))
         print()

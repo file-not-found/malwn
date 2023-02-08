@@ -9,6 +9,7 @@ import queue
 import core.dirwalker as dirwalker
 import core.yaramatch as yaramatch
 import core.fileinfo as fileinfo
+import core.vtinfo as vtinfo
 import core.cli as cli
 import core.modules as modules
 
@@ -44,6 +45,10 @@ def init_config(reset=False):
         p = input(f'please enter default output format: ')
         config['malwn']['default_output'] = p
         reset = True
+    if not 'vt_api_key' in config['malwn']:
+        p = input(f'please enter the virustotal api key: ')
+        config['malwn']['vt_api_key'] = p
+        reset = True
     if reset:
         with open(CONFIG, 'w') as configfile:
             config.write(configfile)
@@ -62,6 +67,10 @@ def fileworker():
             filequeue.task_done()
             continue
         cli.debug_print("got fileformat", args)
+
+        vt = vtinfo.get_vtinfo(info, args)
+        cli.debug_print("got vt info", args)
+
         matches = yaramatch.get_yaramatches(info, args)
         cli.debug_print("got matches", args)
         rulenames = [str(item) for e in matches for item in matches[e]]
@@ -71,6 +80,7 @@ def fileworker():
         results[file] = {}
         results[file]["banner"] = info.get_banner()
         results[file]["fileinfo"] = info.get_info()
+        results[file]["vtinfo"] = vt
         results[file]["yaramatches"] = matches
         results[file]["modules"] = modinfo
         filequeue.task_done()
@@ -89,6 +99,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser = dirwalker.add_args(parser)
     parser = fileinfo.add_args(parser)
+    parser = vtinfo.add_args(parser)
     parser = yaramatch.add_args(parser)
     parser = cli.add_args(parser)
     parser = modules.add_args(parser)
@@ -99,6 +110,7 @@ if __name__ == '__main__':
     init_config(args.reset)
 
     cli.debug_print("compiling yara rules", args)
+    vtinfo.init_api(malwn_conf["vt_api_key"])
     yaramatch.init_rules(malwn_conf["yara_path"], args)
     modules.init_modules(malwn_conf["module_path"])
 

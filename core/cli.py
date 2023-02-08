@@ -18,8 +18,8 @@ def add_args(parser):
 
 def print_results(results, default_output, args):
     if args.long:
-        args.output = default_output
-    if args.output != '':
+        if args.output == '':
+            args.output = default_output
         global formats
         for f in formats:
             if f.__name__ == args.output:
