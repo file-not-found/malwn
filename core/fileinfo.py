@@ -67,13 +67,13 @@ class FileInfo:
     def set_info(self):
         import hashlib
         self.info = {}
-        self.info["Filename"] = os.path.basename(self.filename)
+        #self.info["Filename"] = os.path.basename(self.filename)
         with open(self.filename, "rb") as infile:
             data = infile.read()
         self.info["MD5"] = hashlib.md5(data).hexdigest()
         self.info["SHA1"] = hashlib.sha1(data).hexdigest()
         self.info["SHA256"] = hashlib.sha256(data).hexdigest()
-        self.info["Filesize (Bytes)"] = self.size
+        self.info["Filesize"] = str(self.size)+" bytes"
         self.info["Filetype"] = self.magic
         #self.info["Entropy"] = self.calc_entropy()
 

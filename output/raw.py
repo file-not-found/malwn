@@ -1,4 +1,4 @@
 import json
 
-def print_results(results):
-    print(json.dumps(results, indent=2))
+def print_result(path, result):
+    print(json.dumps({path: result}, indent=2))

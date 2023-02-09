@@ -167,15 +167,17 @@ class FileInfo(fileinfo.FileInfo):
 
     def set_info(self):
         super().set_info()
-        self.info["Compile Timestamp"] = self.format_time(self.get_compile_time(), "")
+        self.info["PEinfo"] = {}
+        self.info["PEinfo"]["CompileTimestamp"] = self.format_time(self.get_compile_time(), "")
         diec = self.get_diec_output()
         if diec != None:
-            self.info["Compiler Info"] = diec
+            self.info["PEinfo"]["CompilerInfo"] = diec
         if self.pdb_filename != None:
-            self.info["PDB Filename"] = self.pdb_filename
+            self.info["PEinfo"]["PDB"] = self.pdb_filename
         if self.export_time != 0:
-            self.info["Export Timestamp"] = self.format_time(self.export_time, "")
+            self.info["PEinfo"]["ExportTimestamp"] = self.format_time(self.export_time, "")
         if self.export_name != None:
-            self.info["Export DLL Name"] = self.export_name
+            self.info["PEinfo"]["ExportDLLName"] = self.export_name
         if self.resource_time != 0:
-            self.info["Resource Timestamp"] = self.format_time(self.resource_time, "")
+            self.info["PEinfo"]["ResourceTimestamp"] = self.format_time(self.resource_time, "")
+

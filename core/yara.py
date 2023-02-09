@@ -22,35 +22,33 @@ compiled_rules = {}
 
 def get_yaramatches(fileinfo, args):
     matchgroups = yaramatches(fileinfo.filename)
-    matches_high = []
-    matches_medium = []
-    matches_low = []
+    matches = []
     
     if args.quality in quality:
         filter_quality = quality[args.quality]
     else:
         filter_quality = quality["medium"]
 
-    for matches in matchgroups:
-        for x in matches:
+    for m in matchgroups:
+        for x in m:
             if "quality" in x.meta and x.meta["quality"] in quality:
                 match_quality = quality[x.meta["quality"]]
             else:
                 match_quality = quality["medium"]
             if match_quality >= quality["high"] and filter_quality <= quality["high"]:
-                matches_high.append(str(x))
+                matches.append(str(x))
             elif match_quality <= quality["low"] and filter_quality <= quality["low"]:
-                matches_low.append(str(x))
+                matches.append(str(x))
             elif match_quality == quality["medium"] and filter_quality <= quality["medium"]:
-                matches_medium.append(str(x))
-    return {"Yara (high)": matches_high, "Yara (medium)": matches_medium, "Yara (low)": matches_low}
+                matches.append(str(x))
+    return matches
 
 def init_rules(folder, args):
     global compiled_rules
-    if args.Yara:
+    if args.noyara:
         return
-    if args.yara:
-        rulepath = args.yara
+    if args.yara_path:
+        rulepath = args.yara_path
     else:
         rulepath = folder
     if not os.path.exists(rulepath):
@@ -86,6 +84,6 @@ def yaramatches(filename):
 
 def add_args(parser):
     parser.add_argument("-q", "--quality", default='medium', choices=['high', 'medium', 'low'], help="minimum rule quality")
-    parser.add_argument("-y", "--yara", help="path to yara rules")
-    parser.add_argument("-Y", "--Yara", default=False, action="store_true", help="disable yara")
+    parser.add_argument("-Y", "--yara_path", help="path to yara rules")
+    parser.add_argument("--noyara", default=False, action="store_true", help="disable yara")
     return parser

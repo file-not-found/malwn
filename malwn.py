@@ -6,12 +6,13 @@ from argparse import ArgumentParser
 import threading
 import queue
 
-import core.dirwalker as dirwalker
-import core.yaramatch as yaramatch
-import core.fileinfo as fileinfo
-import core.vtinfo as vtinfo
-import core.cli as cli
-import core.modules as modules
+import core.dirwalker as m_dirwalker
+import core.fileinfo as m_fileinfo
+import core.output as m_output
+import core.modules as m_modules
+
+import core.yara as m_yara
+import core.vt as m_vt
 
 from configparser import ConfigParser
 
@@ -60,29 +61,29 @@ def fileworker():
         if not file:
             filequeue.task_done()
             break;
-        cli.debug_print("processing file {}".format(file), args)
+        m_output.debug_print("processing file {}".format(file), args)
 
-        info = fileinfo.get_fileinfo(file, args)
-        if info == None:
+        fileinfo = m_fileinfo.get_fileinfo(file, args)
+        if fileinfo == None:
             filequeue.task_done()
             continue
-        cli.debug_print("got fileformat", args)
+        m_output.debug_print("got fileformat", args)
 
-        vt = vtinfo.get_vtinfo(info, args)
-        cli.debug_print("got vt info", args)
+        vtinfo = m_vt.get_vtinfo(fileinfo, args)
+        m_output.debug_print("got vt info", args)
 
-        matches = yaramatch.get_yaramatches(info, args)
-        cli.debug_print("got matches", args)
-        rulenames = [str(item) for e in matches for item in matches[e]]
+        yaramatches = m_yara.get_yaramatches(fileinfo, args)
+        m_output.debug_print("got yara matches", args)
+        rulenames = yaramatches
 
-        compatible_modules = modules.get_compatible_modules(rulenames)
-        modinfo = modules.run(info, compatible_modules, args)
+        compatible_modules = m_modules.get_compatible_modules(rulenames)
+        modinfo = m_modules.run(fileinfo, compatible_modules, args)
         results[file] = {}
-        results[file]["banner"] = info.get_banner()
-        results[file]["fileinfo"] = info.get_info()
-        results[file]["vtinfo"] = vt
-        results[file]["yaramatches"] = matches
-        results[file]["modules"] = modinfo
+        results[file]["Banner"] = fileinfo.get_banner()
+        results[file]["Fileinfo"] = fileinfo.get_info()
+        results[file]["Fileinfo"]["VirusTotal"] = vtinfo
+        results[file]["Fileinfo"]["Yara"] = yaramatches
+        results[file]["Fileinfo"]["Modules"] = modinfo
         filequeue.task_done()
 
 def add_args(parser):
@@ -93,35 +94,35 @@ def add_args(parser):
 
 if __name__ == '__main__':
 
-    fileinfo.init_formats(MALWN_PATH + "/formats/")
-    cli.init_formats(MALWN_PATH + "/output/")
+    m_fileinfo.init_formats(MALWN_PATH + "/formats/")
+    m_output.init_formats(MALWN_PATH + "/output/")
 
     parser = ArgumentParser()
-    parser = dirwalker.add_args(parser)
-    parser = fileinfo.add_args(parser)
-    parser = vtinfo.add_args(parser)
-    parser = yaramatch.add_args(parser)
-    parser = cli.add_args(parser)
-    parser = modules.add_args(parser)
+    parser = m_dirwalker.add_args(parser)
+    parser = m_fileinfo.add_args(parser)
+    parser = m_vt.add_args(parser)
+    parser = m_yara.add_args(parser)
+    parser = m_output.add_args(parser)
+    parser = m_modules.add_args(parser)
 
     parser = add_args(parser)
     args = parser.parse_args()
 
     init_config(args.reset)
 
-    cli.debug_print("compiling yara rules", args)
-    vtinfo.init_api(malwn_conf["vt_api_key"])
-    yaramatch.init_rules(malwn_conf["yara_path"], args)
-    modules.init_modules(malwn_conf["module_path"])
+    m_output.debug_print("compiling yara rules", args)
+    m_vt.init_api(malwn_conf["vt_api_key"])
+    m_yara.init_rules(malwn_conf["yara_path"], args)
+    m_modules.init_modules(malwn_conf["module_path"])
 
     filequeue = queue.Queue()
 
-    for file in dirwalker.get_all_files(args):
+    for file in m_dirwalker.get_all_files(args):
         if not os.path.isfile(file):
             continue
         filequeue.put(file)
 
-    cli.debug_print("starting threads", args)
+    m_output.debug_print("starting threads", args)
     threads = []
     results = {}
     for i in range(args.threads):
@@ -130,13 +131,13 @@ if __name__ == '__main__':
         threads.append(t)
 
     filequeue.join()
-    cli.debug_print("filequeue finished", args)
+    m_output.debug_print("filequeue finished", args)
     for i in threads:
         filequeue.put(None)
     for t in threads:
         t.join()
-    cli.debug_print("threads stopped", args)
+    m_output.debug_print("threads stopped", args)
 
     if args.sort:
-        results = dict(sorted(results.items(), key=lambda x: x[1]["banner"][25:]))
-    cli.print_results(results, malwn_conf["default_output"], args)
+        results = dict(sorted(results.items(), key=lambda x: x[1]["Banner"][25:]))
+    m_output.print_results(results, malwn_conf["default_output"], args)
