@@ -7,7 +7,7 @@ modules = {}
 
 def add_args(parser):
     parser.add_argument("-M", "--allmodules", default=False, action="store_true", help="run all supported modules")
-    parser.add_argument("-m", "--module", help="module to run")
+    parser.add_argument("-m", "--module", action="append", help="module to run")
     return parser
 
 def init_modules(folder):
@@ -30,10 +30,10 @@ def run(fileinfo, compatible_modules, args):
     results = {}
     filename = fileinfo.filename
     for r in compatible_modules.keys():
-        if args.allmodules or (args.module and args.module.split("/")[0] == r):
+        if args.allmodules or r in [m.split("/")[0] for m in args.module]:
             for module in modules[r]:
-                if r not in results:
-                    results[r] = {}
-                if args.allmodules or not "/" in args.module or args.module.split("/")[1] == module.__name__:
+                if args.allmodules or r in args.module or f"{r}/{module.__name__}" in args.module:
+                    if r not in results:
+                        results[r] = {}
                     results[r][module.__name__] = module.run(filename)
     return results

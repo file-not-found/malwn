@@ -82,7 +82,7 @@ class FileInfo:
         return e
 
     def add_filename(self, name):
-        if is_hash(name):
+        if is_hash(name) or name in self.filenames:
             return
         self.filenames.append(name)
 
