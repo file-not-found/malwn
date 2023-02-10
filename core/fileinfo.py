@@ -24,6 +24,13 @@ def add_args(parser):
    return parser
 
 
+def is_hash(s):
+    hexchars = "1234567890ABCDEFabcdef"
+    if len(s) == 64 or len(s) == 40 or len(s) == 32:
+        if all(c in hexchars for c in s):
+            return True
+    return False
+
 class FileInfo:
     filename = None
     size = None
@@ -32,6 +39,7 @@ class FileInfo:
     filetype = None
     magic = None
     time = ""
+    filenames = []
 
     info = {}
 
@@ -39,6 +47,7 @@ class FileInfo:
         self.filename = filename
         self.size = os.stat(self.filename).st_size
         self.magic = magic.from_file(self.filename)
+        self.filenames = []
 
     def calc_entropy(self):
         with open(self.filename, "rb") as infile:
@@ -53,6 +62,11 @@ class FileInfo:
             p_x = count / l
             e += - p_x * math.log2(p_x)
         return e
+
+    def add_filename(self, name):
+        if is_hash(name):
+            return
+        self.filenames.append(name)
 
     def get_banner(self):
         if self.time and self.filetype:
@@ -75,6 +89,7 @@ class FileInfo:
         self.info["SHA256"] = hashlib.sha256(data).hexdigest()
         self.info["Filesize"] = str(self.size)+" bytes"
         self.info["Filetype"] = self.magic
+        self.info["Filenames"] = self.filenames
         #self.info["Entropy"] = self.calc_entropy()
 
     def get_info(self):

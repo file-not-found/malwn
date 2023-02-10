@@ -63,16 +63,17 @@ class FileInfo(fileinfo.FileInfo):
 
     def set_info(self):
         super().set_info()
+        self.info["DOCinfo"] = {}
         if 'FlashPix:Author' in self.metadata:
-            self.info["Author"] = self.metadata['FlashPix:Author']
+            self.info["DOCinfo"]["Author"] = self.metadata['FlashPix:Author']
         if 'FlashPix:CreateDate' in self.metadata:
-            self.info["Create Date"] = self.format_datetime(self.metadata['FlashPix:CreateDate'])
+            self.info["DOCinfo"]["Create Date"] = self.format_datetime(self.metadata['FlashPix:CreateDate'])
         if 'FlashPix:LastModifiedBy' in self.metadata:
-            self.info["Last Modified By"] = self.metadata['FlashPix:LastModifiedBy']
-        self.info["Modify Date"] = self.time
+            self.info["DOCinfo"]["Last Modified By"] = self.metadata['FlashPix:LastModifiedBy']
+        self.info["DOCinfo"]["Modify Date"] = self.time
         if 'FlashPix:Template' in self.metadata:
-            self.info["Template"] = self.metadata['FlashPix:Template']
+            self.info["DOCinfo"]["Template"] = self.metadata['FlashPix:Template']
         if 'FlashPix:LanguageCode' in self.metadata:
-            self.info["LanguageCode"] = hex(int(self.metadata['FlashPix:LanguageCode']))
+            self.info["DOCinfo"]["LanguageCode"] = hex(int(self.metadata['FlashPix:LanguageCode']))
         if 'FlashPix:TotalEditTime' in self.metadata:
-            self.info["Total Edit Time"] = self.metadata['FlashPix:TotalEditTime']
+            self.info["DOCinfo"]["Total Edit Time"] = self.metadata['FlashPix:TotalEditTime']

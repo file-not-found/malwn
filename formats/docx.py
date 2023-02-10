@@ -77,26 +77,27 @@ class FileInfo(fileinfo.FileInfo):
         self.time = self.get_modification_date()
         with exiftool.ExifToolHelper() as et:
             meta = et.get_metadata(filename)
+            self.info["DOCinfo"] = {}
             if "File:FileType" in meta:
-                self.info["Type"] = meta["File:FileType"]
+                self.info["DOCinfo"]["Type"] = meta["File:FileType"]
             if "XML:Application" in meta:
-                self.info["Application"] = meta["XML:Application"]
+                self.info["DOCinfo"]["Application"] = meta["XML:Application"]
                 if "XML:AppVersion" in meta:
-                    self.info["Application"] += " (v{})".format(meta["XML:AppVersion"])
+                    self.info["DOCinfo"]["Application"] += " (v{})".format(meta["XML:AppVersion"])
             if "XMP:Creator" in meta:
-                self.info["Creator"] = meta["XMP:Creator"]
+                self.info["DOCinfo"]["Creator"] = meta["XMP:Creator"]
             if "XML:CreateDate" in meta:
-                self.info["Create Date"] = meta["XML:CreateDate"]
+                self.info["DOCinfo"]["Create Date"] = meta["XML:CreateDate"]
             if "XML:LastModifiedBy" in meta:
-                self.info["Last Modified By"] = meta["XML:LastModifiedBy"]
-            self.info["Modify Date"] = self.time
+                self.info["DOCinfo"]["Last Modified By"] = meta["XML:LastModifiedBy"]
+            self.info["DOCinfo"]["Modify Date"] = self.time
             if "XML:Template" in meta:
-                self.info["Template"] = meta["XML:Template"]
+                self.info["DOCinfo"]["Template"] = meta["XML:Template"]
             if "XML:TotalEditTime" in meta:
-                self.info["Total Edit Time"] = meta["XML:TotalEditTime"]
+                self.info["DOCinfo"]["Total Edit Time"] = meta["XML:TotalEditTime"]
             if "XML:Pages" in meta:
-                self.info["Pages"] = meta["XML:Pages"]
+                self.info["DOCinfo"]["Pages"] = meta["XML:Pages"]
             if "XML:Words" in meta:
-                self.info["Words"] = meta["XML:Words"]
+                self.info["DOCinfo"]["Words"] = meta["XML:Words"]
             if "XML:Characters" in meta:
-                self.info["Characters"] = meta["XML:Characters"]
+                self.info["DOCinfo"]["Characters"] = meta["XML:Characters"]

@@ -68,6 +68,7 @@ class FileInfo(fileinfo.FileInfo):
                     self.export_name = export_data.name.decode("UTF-8")
                 except:
                     return
+                self.add_filename(self.export_name)
 
     def set_resource_time(self, pe):
         va, s = self.get_data_directory_offset(pe, 2)

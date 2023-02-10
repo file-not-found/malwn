@@ -32,6 +32,8 @@ def get_vtinfo(fileinfo, args):
             if date != None:
                 first_submission = get_submission(hashsum, date)
             vtinfo = extract_values(report, first_submission)
+            if 'Filename' in vtinfo:
+                fileinfo.add_filename(vtinfo['Filename'])
     return vtinfo
 
 def get_report(h):
@@ -59,7 +61,7 @@ def extract_values(report, submission):
         info['SubmitterInterface'] = submission_attributes['interface']
     if 'country' in submission_attributes:
         info['SubmitterCountry'] = submission_attributes['country']
-    if 'city' in submission_attributes:
+    if 'city' in submission_attributes and submission_attributes['city'] != '?':
         info['SubmitterCity'] = submission_attributes['city']
     if 'last_analysis_stats' in report_attributes \
     and 'harmless' in report_attributes['last_analysis_stats'] \
