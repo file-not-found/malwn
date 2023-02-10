@@ -23,8 +23,8 @@ def obsidian_format(d, level=0):
 def print_result(file, info):
     filenames = []
    
-    finfo = info.get("Fileinfo")
-    if finfo:
-        label = finfo.get("SHA256")
-        print(indent + f"{label}:")
-        obsidian_format(finfo, level=2)
+    fileinfo = info.get("Fileinfo")
+    if fileinfo:
+        label = fileinfo.get("SHA256")
+        print(indent + f"- {label}:")
+        obsidian_format(fileinfo, level=2)

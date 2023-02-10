@@ -23,9 +23,26 @@ def add_args(parser):
    parser.add_argument("-a", "--all", default=False, action="store_true", help="analyze all files")
    return parser
 
+def init_formats(path):
+    global formats
+    if formats == []:
+        formats = loader.import_all(path)
+
+def get_fileinfo(filename, args):
+    global formats
+    for f in formats:
+        fileinfo = f.FileInfo(filename)
+        if fileinfo.fileformat:
+            return fileinfo
+    if args.all:
+        return FileInfo(filename)
+    return None
 
 def is_hash(s):
     hexchars = "1234567890ABCDEFabcdef"
+    splitchars = "."
+    if '.' in s:
+        s = s.split('.')[0]
     if len(s) == 64 or len(s) == 40 or len(s) == 32:
         if all(c in hexchars for c in s):
             return True
@@ -48,6 +65,7 @@ class FileInfo:
         self.size = os.stat(self.filename).st_size
         self.magic = magic.from_file(self.filename)
         self.filenames = []
+        self.add_filename(os.path.basename(filename))
 
     def calc_entropy(self):
         with open(self.filename, "rb") as infile:
@@ -95,18 +113,3 @@ class FileInfo:
     def get_info(self):
         self.set_info()
         return self.info
-
-def init_formats(path):
-    global formats
-    if formats == []:
-        formats = loader.import_all(path)
-
-def get_fileinfo(filename, args):
-    global formats
-    for f in formats:
-        fileinfo = f.FileInfo(filename)
-        if fileinfo.fileformat:
-            return fileinfo
-    if args.all:
-        return FileInfo(filename)
-    return None

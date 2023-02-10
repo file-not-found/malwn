@@ -24,6 +24,7 @@ class FileInfo(fileinfo.FileInfo):
     def __init__(self, filename):
         try:
             pe = pefile.PE(filename, fast_load=True)
+            super().__init__(filename)
             self.fileformat = __name__
             self.set_fileformat(pe)
             self.set_compile_time(pe)
@@ -36,7 +37,6 @@ class FileInfo(fileinfo.FileInfo):
             self.set_export_name(pe)
             self.set_pdb_filename(pe)
             del pe
-            super().__init__(filename)
         except pefile.PEFormatError:
             return None
         except Exception as e:

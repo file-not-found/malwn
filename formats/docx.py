@@ -25,8 +25,8 @@ class FileInfo(fileinfo.FileInfo):
                 self.zipfile = zipfile.ZipFile(filename)
                 if "[Content_Types].xml" in self.zipfile.namelist() and "docProps/app.xml" in self.zipfile.namelist() and "docProps/core.xml" in self.zipfile.namelist():
                     self.fileformat = __name__
-                    self.time = self.get_modification_date()
                     super().__init__(filename)
+                    self.time = self.get_modification_date()
                 self.set_fileformat()
                 self.set_filetype()
         except:
