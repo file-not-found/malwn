@@ -21,7 +21,7 @@ compiled_rules = {}
 
 
 def get_yaramatches(fileinfo, args):
-    matchgroups = yaramatches(fileinfo.filename)
+    matchgroups = yaramatches(fileinfo.path)
     matches = []
     
     if args.quality in quality:

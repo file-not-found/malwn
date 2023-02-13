@@ -28,47 +28,45 @@ def init_formats(path):
     if formats == []:
         formats = loader.import_all(path)
 
-def get_fileinfo(filename, args):
+def get_fileinfo(path, args):
     global formats
     for f in formats:
-        fileinfo = f.FileInfo(filename)
-        if fileinfo.fileformat:
+        fileinfo = f.FileInfo(path)
+        if hasattr(fileinfo, 'fileformat'):
             return fileinfo
     if args.all:
-        return FileInfo(filename)
+        return FileInfo(path)
     return None
 
-def is_hash(s):
+def contains_hash(s):
     hexchars = "1234567890ABCDEFabcdef"
     splitchars = "."
     if '.' in s:
-        s = s.split('.')[0]
-    if len(s) == 64 or len(s) == 40 or len(s) == 32:
-        if all(c in hexchars for c in s):
-            return True
+        s_list = s.split('.')
+    elif '_' in s:
+        s_list = s.split('_')
+    else:
+        s_list = [s, ]
+    for s in s_list:
+        if len(s) == 64 or len(s) == 40 or len(s) == 32:
+            if all(c in hexchars for c in s):
+                return True
     return False
 
 class FileInfo:
-    filename = None
-    size = None
 
-    fileformat = ""
-    filetype = None
-    magic = None
-    time = ""
-    filenames = []
-
-    info = {}
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.size = os.stat(self.filename).st_size
-        self.magic = magic.from_file(self.filename)
+    def __init__(self, path):
+        self.path = path
+        self.fileformat = ""
+        self.filetype = None
+        self.size = os.stat(self.path).st_size
+        self.time = ""
+        self.magic = magic.from_file(self.path)
         self.filenames = []
-        self.add_filename(os.path.basename(filename))
+        self.info = {}
 
     def calc_entropy(self):
-        with open(self.filename, "rb") as infile:
+        with open(self.path, "rb") as infile:
             data = infile.read()
         l = len(data)
         if l == 0:
@@ -82,7 +80,7 @@ class FileInfo:
         return e
 
     def add_filename(self, name):
-        if is_hash(name) or name in self.filenames:
+        if name in self.filenames or contains_hash(name):
             return
         self.filenames.append(name)
 
@@ -98,10 +96,9 @@ class FileInfo:
 
     def set_info(self):
         import hashlib
-        self.info = {}
-        #self.info["Filename"] = os.path.basename(self.filename)
-        with open(self.filename, "rb") as infile:
+        with open(self.path, "rb") as infile:
             data = infile.read()
+        self.add_filename(os.path.basename(self.path))
         self.info["MD5"] = hashlib.md5(data).hexdigest()
         self.info["SHA1"] = hashlib.sha1(data).hexdigest()
         self.info["SHA256"] = hashlib.sha256(data).hexdigest()

@@ -21,10 +21,10 @@ class FileInfo(fileinfo.FileInfo):
     export_name = None
     pdb_filename = None
 
-    def __init__(self, filename):
+    def __init__(self, path):
         try:
-            pe = pefile.PE(filename, fast_load=True)
-            super().__init__(filename)
+            pe = pefile.PE(path, fast_load=True)
+            super().__init__(path)
             self.fileformat = __name__
             self.set_fileformat(pe)
             self.set_compile_time(pe)
@@ -32,9 +32,9 @@ class FileInfo(fileinfo.FileInfo):
             self.set_resource_time(pe)
             self.check_dot_net(pe)
             self.set_filetype(pe)
+            self.set_export_name(pe)
             #self.time = self.get_latest_time()
             self.time = self.format_time(self.compile_time, ' ')
-            self.set_export_name(pe)
             self.set_pdb_filename(pe)
             del pe
         except pefile.PEFormatError:
@@ -68,7 +68,6 @@ class FileInfo(fileinfo.FileInfo):
                     self.export_name = export_data.name.decode("UTF-8")
                 except:
                     return
-                self.add_filename(self.export_name)
 
     def set_resource_time(self, pe):
         va, s = self.get_data_directory_offset(pe, 2)
@@ -158,7 +157,7 @@ class FileInfo(fileinfo.FileInfo):
         import subprocess
         import json
         try:
-            comp = subprocess.run(["diec", "-j", self.filename], capture_output=True)
+            comp = subprocess.run(["diec", "-j", self.path], capture_output=True)
             res = json.loads(comp.stdout)
             return ", ".join([x["string"] for x in res["detects"]])
         except FileNotFoundError:
@@ -179,6 +178,7 @@ class FileInfo(fileinfo.FileInfo):
             self.info["PEinfo"]["ExportTimestamp"] = self.format_time(self.export_time, "")
         if self.export_name != None:
             self.info["PEinfo"]["ExportDLLName"] = self.export_name
+            self.add_filename(self.export_name)
         if self.resource_time != 0:
             self.info["PEinfo"]["ResourceTimestamp"] = self.format_time(self.resource_time, "")
 

@@ -15,18 +15,18 @@ if import_error:
     exit(-1)
 
 class FileInfo(fileinfo.FileInfo):
-    metadata = {}
 
-    def __init__(self, filename):
+    def __init__(self, path):
         try:
             header = b''
-            with open(filename, "rb") as infile:
+            with open(path, "rb") as infile:
                 header = infile.read(4)
             if header == b"\xd0\xcf\x11\xe0":
-                super().__init__(filename)
+                self.metadata = {}
+                super().__init__(path)
                 self.magic = self.magic.split(',')[0]
                 with exiftool.ExifToolHelper() as et:
-                    self.metadata = et.get_metadata(filename)[0]
+                    self.metadata = et.get_metadata(path)[0]
 
                 self.set_modification_date()
                 self.set_fileformat()

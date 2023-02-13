@@ -15,17 +15,16 @@ if import_error:
     exit(-1)
 
 class FileInfo(fileinfo.FileInfo):
-    zipfile = None
 
-    def __init__(self, filename):
+    def __init__(self, path):
         try:
-            with open(filename, "rb") as infile:
+            with open(path, "rb") as infile:
                 header = infile.read(4)
             if header == b"\x50\x4b\x03\x04":
-                self.zipfile = zipfile.ZipFile(filename)
+                self.zipfile = zipfile.ZipFile(path)
                 if "[Content_Types].xml" in self.zipfile.namelist() and "docProps/app.xml" in self.zipfile.namelist() and "docProps/core.xml" in self.zipfile.namelist():
                     self.fileformat = __name__
-                    super().__init__(filename)
+                    super().__init__(path)
                     self.time = self.get_modification_date()
                 self.set_fileformat()
                 self.set_filetype()
@@ -73,10 +72,9 @@ class FileInfo(fileinfo.FileInfo):
 
     def set_info(self):
         super().set_info()
-        filename = self.filename
         self.time = self.get_modification_date()
         with exiftool.ExifToolHelper() as et:
-            meta = et.get_metadata(filename)
+            meta = et.get_metadata(self.path)
             self.info["DOCinfo"] = {}
             if "File:FileType" in meta:
                 self.info["DOCinfo"]["Type"] = meta["File:FileType"]

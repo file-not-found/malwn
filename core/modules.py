@@ -28,12 +28,11 @@ def get_compatible_modules(rulenames):
 
 def run(fileinfo, compatible_modules, args):
     results = {}
-    filename = fileinfo.filename
     for r in compatible_modules.keys():
         if args.allmodules or (args.module and r in [m.split("/")[0] for m in args.module]):
             for module in modules[r]:
                 if args.allmodules or (args.module and r in args.module or f"{r}/{module.__name__}" in args.module):
                     if r not in results:
                         results[r] = {}
-                    results[r][module.__name__] = module.run(filename)
+                    results[r][module.__name__] = module.run(fileinfo.path)
     return results
