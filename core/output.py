@@ -14,8 +14,12 @@ def add_args(parser):
     parser.add_argument("--debug", default=False, action="store_true", help="print debug messages")
     parser.add_argument("--onlyhits", default=False, action="store_true", help="only print files with yara matches in short output")
     parser.add_argument("--nohits", default=False, action="store_true", help="only print files with no yara matches in short output")
+    parser.add_argument("--filelist", default=False, action="store_true", help="only print list with filenames")
     parser.add_argument("-y", "--yara_rule", help="filter on single rule")
     return parser
+
+def list_print(path, result):
+    print(path)
 
 def single_print(path, result):
     res = result["Banner"] + "  " + path
@@ -34,7 +38,10 @@ def print_results(results, default_output, args):
             if f.__name__ == args.output:
                 print_func = f.print_result
     else:
-        print_func = single_print
+        if args.filelist:
+            print_func = list_print
+        else:
+            print_func = single_print
     for path, result in results.items():
         if "Fileinfo" in result and "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
             if args.nohits:
