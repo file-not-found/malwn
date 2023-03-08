@@ -33,7 +33,10 @@ def get_vtinfo(fileinfo, args):
                 first_submission = get_submission(hashsum, date)
             vtinfo = extract_values(report, first_submission)
             if 'Filename' in vtinfo:
-                fileinfo.add_filename(vtinfo['Filename'])
+                filename = vtinfo['Filename']
+                if '/' in filename:
+                    filename = filename.split('/')[-1]
+                fileinfo.add_filename(filename)
     return vtinfo
 
 def get_report(h):
