@@ -41,7 +41,7 @@ class FileInfo(fileinfo.FileInfo):
 
     def set_filetype(self):
         if 'FlashPix:CompObjUserType' in self.metadata and self.metadata['FlashPix:CompObjUserType'] != '':
-            self.filetype = self.metadata['FlashPix:CompObjUserType']
+            self.filetype = self.metadata['FlashPix:CompObjUserType'].strip()
         else:
             self.filetype = self.magic
         self.filetype = self.filetype.replace("Microsoft", "MS")
