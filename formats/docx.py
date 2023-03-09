@@ -42,6 +42,8 @@ class FileInfo(fileinfo.FileInfo):
             self.fileformat = "DOTM"
         elif b"template.main+xml" in data:
             self.fileformat = "DOTX"
+        elif b"application/vnd.openxmlformats-officedocument.spreadsheetml" in data:
+            self.fileformat = "XLSX"
         elif b"application/vnd.ms-excel.sheet.macroEnabled" in data:
             self.fileformat = "XLSM"
         else:
@@ -59,7 +61,7 @@ class FileInfo(fileinfo.FileInfo):
         self.filetype = self.filetype.replace(" Office", "")
         m = re.search(b"<AppVersion>(.*)</AppVersion>", data)
         if m:
-            self.filetype += " (v{})".format(m.group(1).decode("utf-8").replace("0000", "0"))
+            self.filetype += " (v{})".format(m.group(1).decode("utf-8").split(".")[0])
 
     def get_modification_date(self):
         with self.zipfile.open("docProps/core.xml") as xmlfile:

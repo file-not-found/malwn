@@ -140,4 +140,6 @@ if __name__ == '__main__':
 
     if args.sort:
         results = dict(sorted(results.items(), key=lambda x: x[1]["Banner"][25:]))
+    else:
+        results = dict(sorted(results.items()))
     m_output.print_results(results, malwn_conf["default_output"], args)

@@ -45,6 +45,10 @@ class FileInfo(fileinfo.FileInfo):
         else:
             self.filetype = self.magic
         self.filetype = self.filetype.replace("Microsoft", "MS")
+        self.filetype = self.filetype.replace("Composite Document File V2", "CDFV2")
+        self.filetype = self.filetype.replace(" Document", "")
+        self.filetype = self.filetype.replace(" Worksheet", "")
+        self.filetype = self.filetype.replace(" Message", "")
 
     def set_modification_date(self):
         if 'FlashPix:ModifyDate' in self.metadata:
