@@ -27,7 +27,7 @@ def single_print(path, result):
         if "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
             res += "  " + " ".join(result["Fileinfo"]["Yara"])
         if "Modules" in result["Fileinfo"] and result["Fileinfo"]["Modules"]:
-            res += "\n" + "\n".join(result["Fileinfo"]["Modules"][m][x] for m in result["Fileinfo"]["Modules"] for x in result["Fileinfo"]["Modules"][m])
+            res += "\n" + "\n".join(str(result["Fileinfo"]["Modules"][m][x]) for m in result["Fileinfo"]["Modules"] for x in result["Fileinfo"]["Modules"][m])
         print(res)
 
 def print_results(results, default_output, args):
