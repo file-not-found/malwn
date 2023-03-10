@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os.path
 import os
+import sys
 from argparse import ArgumentParser
 
 import threading
@@ -61,29 +61,32 @@ def fileworker():
         if not file:
             filequeue.task_done()
             break;
-        m_output.debug_print("processing file {}".format(file), args)
+        try:
+            m_output.debug_print("processing file {}".format(file), args)
 
-        fileinfo = m_fileinfo.get_fileinfo(file, args)
-        if fileinfo == None:
-            filequeue.task_done()
-            continue
-        m_output.debug_print("got fileformat", args)
+            fileinfo = m_fileinfo.get_fileinfo(file, args)
+            if fileinfo == None:
+                filequeue.task_done()
+                continue
+            m_output.debug_print("got fileformat", args)
 
-        vtinfo = m_vt.get_vtinfo(fileinfo, args)
-        m_output.debug_print("got vt info", args)
+            vtinfo = m_vt.get_vtinfo(fileinfo, args)
+            m_output.debug_print("got vt info", args)
 
-        yaramatches = m_yara.get_yaramatches(fileinfo, args)
-        m_output.debug_print("got yara matches", args)
-        rulenames = yaramatches
+            yaramatches = m_yara.get_yaramatches(fileinfo, args)
+            m_output.debug_print("got yara matches", args)
+            rulenames = yaramatches
 
-        compatible_modules = m_modules.get_compatible_modules(rulenames)
-        modinfo = m_modules.run(fileinfo, compatible_modules, args)
-        results[file] = {}
-        results[file]["Banner"] = fileinfo.get_banner()
-        results[file]["Fileinfo"] = fileinfo.get_info()
-        results[file]["Fileinfo"]["VirusTotal"] = vtinfo
-        results[file]["Fileinfo"]["Yara"] = yaramatches
-        results[file]["Fileinfo"]["Modules"] = modinfo
+            compatible_modules = m_modules.get_compatible_modules(rulenames)
+            modinfo = m_modules.run(fileinfo, compatible_modules, args)
+            results[file] = {}
+            results[file]["Banner"] = fileinfo.get_banner()
+            results[file]["Fileinfo"] = fileinfo.get_info()
+            results[file]["Fileinfo"]["VirusTotal"] = vtinfo
+            results[file]["Fileinfo"]["Yara"] = yaramatches
+            results[file]["Fileinfo"]["Modules"] = modinfo
+        except Exception as e:
+            print(f"Error processing {file}: {e}", file=sys.stderr)
         filequeue.task_done()
 
 def add_args(parser):

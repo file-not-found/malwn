@@ -23,9 +23,12 @@ def list_print(path, result):
 
 def single_print(path, result):
     res = result["Banner"] + "  " + path
-    if "Fileinfo" in result and "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
-        res += "  " + " ".join(result["Fileinfo"]["Yara"])
-    print(res)
+    if "Fileinfo" in result:
+        if "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
+            res += "  " + " ".join(result["Fileinfo"]["Yara"])
+        if "Modules" in result["Fileinfo"] and result["Fileinfo"]["Modules"]:
+            res += "\n" + "\n".join(result["Fileinfo"]["Modules"][m][x] for m in result["Fileinfo"]["Modules"] for x in result["Fileinfo"]["Modules"][m])
+        print(res)
 
 def print_results(results, default_output, args):
     if args.output == '':

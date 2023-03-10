@@ -32,7 +32,9 @@ def run(fileinfo, compatible_modules, args):
         if args.allmodules or (args.module and r in [m.split("/")[0] for m in args.module]):
             for module in modules[r]:
                 if args.allmodules or (args.module and r in args.module or f"{r}/{module.__name__}" in args.module):
-                    if r not in results:
-                        results[r] = {}
-                    results[r][module.__name__] = module.run(fileinfo.path)
+                    v = module.run(fileinfo.path)
+                    if v != None:
+                        if r not in results:
+                            results[r] = {}
+                        results[r][module.__name__] = v
     return results
