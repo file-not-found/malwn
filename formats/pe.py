@@ -160,12 +160,12 @@ class FileInfo(fileinfo.FileInfo):
             comp = subprocess.run(["diec", "-j", self.path], capture_output=True)
             res = json.loads(comp.stdout)
             if "detects" in res:
-                if ("values" in x for x in res["detects"]):
+                if all("values" in x for x in res["detects"]):
                     l = res["detects"][0]["values"]
                 else:
                     l = res["detects"]
                 print(l)
-                if ("string" in x for x in l):
+                if all("string" in x for x in l):
                     return ", ".join([x["string"] for x in l])
             return None
         except FileNotFoundError:
