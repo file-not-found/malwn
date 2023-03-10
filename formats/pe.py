@@ -164,7 +164,6 @@ class FileInfo(fileinfo.FileInfo):
                     l = res["detects"][0]["values"]
                 else:
                     l = res["detects"]
-                print(l)
                 if all("string" in x for x in l):
                     return ", ".join([x["string"] for x in l])
             return None
