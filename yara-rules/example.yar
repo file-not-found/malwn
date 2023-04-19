@@ -45,6 +45,18 @@ condition:
     all of them
 }
 
+rule dotnet {
+	strings:
+		$mz_header = { 4D 5A }
+    	condition:
+        	$mz_header at 0 and (
+            	pe.imports("mscoree.dll", "_CorExeMain") or
+            	pe.imports("mscoree.dll", "_CorDllMain") or
+            	pe.imports("mscoree.dll", "CorBindToRuntimeEx") or
+            	pe.imports("mscoree.dll", "CorBindToRuntimeByCfg")
+        	)
+}
+
 rule cobaltstrike_config{
 strings:
     $ = "\x00\x00\x00\x1a\x00\x03\x00\x10GET\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1b\x00\x03\x00\x10POST\x00\x00" xor
