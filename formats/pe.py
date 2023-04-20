@@ -9,6 +9,11 @@ try:
 except ImportError as e:
     print(f"ImportError: {__file__}: {e} (pip3 install pefile)", file=sys.stderr)
     import_error = True
+try:
+    import dotnetfile
+except ImportError as e:
+    print(f"ImportError: {__file__}: {e} (install dotnetfile from https://github.com/pan-unit42/dotnetfile)", file=sys.stderr)
+    import_error = True
 if import_error:
     exit(-1)
 
@@ -20,25 +25,34 @@ class FileInfo(fileinfo.FileInfo):
     resource_time = 0
     export_name = None
     pdb_filename = None
+    module_name = None
+    assembly_info = {}
 
     def __init__(self, path):
         try:
-            pe = pefile.PE(path, fast_load=True)
+            try:
+                pe = dotnetfile.DotNetPE(path)
+                self.dot_net = True
+            except dotnetfile.parser.CLRFormatError:
+                pe = pefile.PE(path, fast_load=True)
+        except pefile.PEFormatError:
+            return None
+        try:
             super().__init__(path)
             self.fileformat = __name__
             self.set_fileformat(pe)
             self.set_compile_time(pe)
             self.set_export_time(pe)
             self.set_resource_time(pe)
-            self.check_dot_net(pe)
             self.set_filetype(pe)
             self.set_export_name(pe)
             #self.time = self.get_latest_time()
             self.time = self.format_time(self.compile_time, ' ')
             self.set_pdb_filename(pe)
+            if self.dot_net:
+                self.set_module_name(pe)
+                self.set_assembly_info(pe)
             del pe
-        except pefile.PEFormatError:
-            return None
         except Exception as e:
             print(e, file=sys.stderr)
             return None
@@ -87,11 +101,6 @@ class FileInfo(fileinfo.FileInfo):
             self.fileformat = "PE32+"
         else:
             self.fileformat = "PE"
-
-    def check_dot_net(self, pe):
-        va, s = self.get_data_directory_offset(pe, 14)
-        if s > 0 and va > 0:
-            self.dot_net = True
 
     def is_dot_net(self):
         return self.dot_net
@@ -153,6 +162,21 @@ class FileInfo(fileinfo.FileInfo):
                 except:
                     self.pdb_filename = None
 
+    def set_module_name(self, dotnetpe):
+        if dotnetpe.metadata_table_exists('Module'):
+            self.module_name = dotnetpe.Module.get_module_name()
+
+    def set_assembly_info(self, dotnetpe):
+        self.assembly_info = {}
+        if dotnetpe.metadata_table_exists('Assembly'):
+            self.assembly_info["Name"] = dotnetpe.Assembly.get_assembly_name()
+            assembly_version_info = dotnetpe.Assembly.get_assembly_version_information()
+
+            self.assembly_info["BuildNumber"] = str(assembly_version_info.BuildNumber)  
+            self.assembly_info["MajorVersion"] = str(assembly_version_info.MajorVersion)
+            self.assembly_info["MinorVersion"] = str(assembly_version_info.MinorVersion)
+            self.assembly_info["RevisionNumber"] = str(assembly_version_info.RevisionNumber)
+
     def get_diec_output(self):
         import subprocess
         import json
@@ -172,20 +196,29 @@ class FileInfo(fileinfo.FileInfo):
         except json.decoder.JSONDecodeError:
             return None
 
-    def set_info(self):
-        super().set_info()
-        self.info["PEinfo"] = {}
-        self.info["PEinfo"]["CompileTimestamp"] = self.format_time(self.get_compile_time(), "")
+    def set_peinfo(self):
+        peinfo = {}
+        peinfo["CompileTimestamp"] = self.format_time(self.get_compile_time(), "")
         diec = self.get_diec_output()
         if diec != None:
-            self.info["PEinfo"]["CompilerInfo"] = diec
+            peinfo["CompilerInfo"] = diec
         if self.pdb_filename != None:
-            self.info["PEinfo"]["PDB"] = self.pdb_filename
+            peinfo["PDB"] = self.pdb_filename
         if self.export_time != 0:
-            self.info["PEinfo"]["ExportTimestamp"] = self.format_time(self.export_time, "")
+            peinfo["ExportTimestamp"] = self.format_time(self.export_time, "")
         if self.export_name != None:
-            self.info["PEinfo"]["ExportDLLName"] = self.export_name
+            peinfo["ExportDLLName"] = self.export_name
             self.add_filename(self.export_name)
         if self.resource_time != 0:
-            self.info["PEinfo"]["ResourceTimestamp"] = self.format_time(self.resource_time, "")
+            peinfo["ResourceTimestamp"] = self.format_time(self.resource_time, "")
+        if self.module_name != None:
+            peinfo["ModuleName"] = self.module_name
+            self.add_filename(self.module_name)
+        if self.assembly_info != {}:
+            peinfo["AssemblyInfo"] = self.assembly_info
 
+        return peinfo
+
+    def set_info(self):
+        super().set_info()
+        self.info["PEinfo"] = self.set_peinfo()
