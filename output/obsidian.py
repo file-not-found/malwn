@@ -1,4 +1,4 @@
-OBSIDIAN_REFS = ['MD5', 'SHA1', 'SHA256', 'SubmitterID']
+OBSIDIAN_REFS = ['MD5', 'SHA1', 'SHA256', 'SubmitterID', 'GUID']
 
 indent = '    '
 

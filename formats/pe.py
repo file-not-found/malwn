@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import re
 import core.fileinfo as fileinfo
 
 import_error = False
@@ -172,10 +173,20 @@ class FileInfo(fileinfo.FileInfo):
             self.assembly_info["Name"] = dotnetpe.Assembly.get_assembly_name()
             assembly_version_info = dotnetpe.Assembly.get_assembly_version_information()
 
-            self.assembly_info["BuildNumber"] = str(assembly_version_info.BuildNumber)  
-            self.assembly_info["MajorVersion"] = str(assembly_version_info.MajorVersion)
-            self.assembly_info["MinorVersion"] = str(assembly_version_info.MinorVersion)
-            self.assembly_info["RevisionNumber"] = str(assembly_version_info.RevisionNumber)
+            self.assembly_info["Version"] = str(assembly_version_info.BuildNumber) + '.'
+            self.assembly_info["Version"] += str(assembly_version_info.MajorVersion) + '.'
+            self.assembly_info["Version"] += str(assembly_version_info.MinorVersion) + '.'
+            self.assembly_info["Version"] += str(assembly_version_info.RevisionNumber)
+
+        guid_pattern = re.compile(
+            rb'\x29\x01\x00\x24[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\x00'
+        )
+
+        guids = re.findall(guid_pattern, dotnetpe.__data__)
+        if len(guids) == 1:
+            self.assembly_info["GUID"] = guids[0][4:-1].decode('utf-8')
+        elif len(guids) > 1:
+            print("ParsingError: Multiple GUIDs found", file=sys.stderr)
 
     def get_diec_output(self):
         import subprocess
