@@ -1,4 +1,4 @@
-OBSIDIAN_REFS = ['MD5', 'SHA1', 'SHA256', 'SubmitterID', 'GUID']
+OBSIDIAN_REFS = ['MD5', 'SHA1', 'SHA256', 'SubmitterID', 'GUIDs']
 
 indent = '    '
 
@@ -12,7 +12,10 @@ def obsidian_format(d, level=0):
         elif type(v) == list:
             print(indent * level + f"- {k}:")
             for e in v:
-                print(indent * (level + 1) + f"- `{e}`")
+                if k in OBSIDIAN_REFS:
+                    print(indent * (level + 1) + f"- [[{e}]]")
+                else:
+                    print(indent * (level + 1) + f"- `{e}`")
         elif type(v) == str:
             if k in OBSIDIAN_REFS:
                 print(indent * level + f"- {k}: [[{v}]]")

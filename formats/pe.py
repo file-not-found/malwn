@@ -27,6 +27,7 @@ class FileInfo(fileinfo.FileInfo):
     export_name = None
     pdb_filename = None
     module_name = None
+    guids = []
     assembly_info = {}
 
     def __init__(self, path):
@@ -52,6 +53,7 @@ class FileInfo(fileinfo.FileInfo):
             self.set_pdb_filename(pe)
             if self.dot_net:
                 self.set_module_name(pe)
+                self.set_guids(pe)
                 self.set_assembly_info(pe)
             del pe
         except Exception as e:
@@ -178,15 +180,16 @@ class FileInfo(fileinfo.FileInfo):
             self.assembly_info["Version"] += str(assembly_version_info.MinorVersion) + '.'
             self.assembly_info["Version"] += str(assembly_version_info.RevisionNumber)
 
+
+    def set_guids(self, dotnetpe):
+        self.guids = []
         guid_pattern = re.compile(
             rb'\x29\x01\x00\x24[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\x00'
         )
 
         guids = re.findall(guid_pattern, dotnetpe.__data__)
-        if len(guids) == 1:
-            self.assembly_info["GUID"] = guids[0][4:-1].decode('utf-8')
-        elif len(guids) > 1:
-            print("ParsingError: Multiple GUIDs found", file=sys.stderr)
+        if len(guids) > 0:
+            self.guids = [guid[4:-1].decode('utf-8') for guid in guids]
 
     def get_diec_output(self):
         import subprocess
@@ -225,6 +228,8 @@ class FileInfo(fileinfo.FileInfo):
         if self.module_name != None:
             peinfo["ModuleName"] = self.module_name
             self.add_filename(self.module_name)
+        if self.guids != []:
+            peinfo["GUIDs"] = self.guids
         if self.assembly_info != {}:
             peinfo["AssemblyInfo"] = self.assembly_info
 
