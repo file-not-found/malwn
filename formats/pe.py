@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import core.fileinfo as fileinfo
@@ -27,6 +28,7 @@ class FileInfo(fileinfo.FileInfo):
     pdb_filename = None
     module_name = None
     assembly_info = {}
+    guids = []
 
     def __init__(self, path):
         try:
@@ -52,6 +54,7 @@ class FileInfo(fileinfo.FileInfo):
             if self.dot_net:
                 self.set_module_name(pe)
                 self.set_assembly_info(pe)
+                self.set_guids(pe)
             del pe
         except Exception as e:
             print(e, file=sys.stderr)
@@ -177,6 +180,19 @@ class FileInfo(fileinfo.FileInfo):
             self.assembly_info["MinorVersion"] = str(assembly_version_info.MinorVersion)
             self.assembly_info["RevisionNumber"] = str(assembly_version_info.RevisionNumber)
 
+    def set_guids(self, dotnetpe):
+        self.guids = []
+        # Suchmuster für GUIDs
+        guid_pattern = re.compile(
+            rb'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+        )
+
+        # Extrahiere GUIDs aus der Binärdaten
+        guids = re.findall(guid_pattern, dotnetpe.__data__)
+
+        # Dekodiere die GUIDs in Unicode-Zeichen
+        self.guids = [guid.decode('utf-8') for guid in guids]
+           
     def get_diec_output(self):
         import subprocess
         import json
@@ -216,6 +232,8 @@ class FileInfo(fileinfo.FileInfo):
             self.add_filename(self.module_name)
         if self.assembly_info != {}:
             peinfo["AssemblyInfo"] = self.assembly_info
+        if len(self.guids) > 0:
+            peinfo["GUIDs"] = self.guids
 
         return peinfo
 
