@@ -175,10 +175,18 @@ class FileInfo(fileinfo.FileInfo):
             self.assembly_info["Name"] = dotnetpe.Assembly.get_assembly_name()
             assembly_version_info = dotnetpe.Assembly.get_assembly_version_information()
 
-            self.assembly_info["Version"] = str(assembly_version_info.BuildNumber) + '.'
-            self.assembly_info["Version"] += str(assembly_version_info.MajorVersion) + '.'
-            self.assembly_info["Version"] += str(assembly_version_info.MinorVersion) + '.'
-            self.assembly_info["Version"] += str(assembly_version_info.RevisionNumber)
+            v = str(assembly_version_info.MajorVersion) + '.'
+            v += str(assembly_version_info.MinorVersion) + '.'
+            v += str(assembly_version_info.BuildNumber) + '.'
+            v += str(assembly_version_info.RevisionNumber)
+            self.assembly_info["AssemblyVersion"] = v
+        msbuild_pattern = re.compile(
+            rb'FileGenerator\x08[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\x00'
+        )
+
+        msbuild_version = re.findall(msbuild_pattern, dotnetpe.__data__)
+        if len(msbuild_version) == 1:
+            self.assembly_info["MSBuildVersion"] = msbuild_version[0][14:-1].decode('utf-8')
 
 
     def set_guids(self, dotnetpe):
@@ -190,6 +198,7 @@ class FileInfo(fileinfo.FileInfo):
         guids = re.findall(guid_pattern, dotnetpe.__data__)
         if len(guids) > 0:
             self.guids = [guid[4:-1].decode('utf-8') for guid in guids]
+
 
     def get_diec_output(self):
         import subprocess
