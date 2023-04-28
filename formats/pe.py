@@ -20,7 +20,8 @@ if import_error:
 
 
 class FileInfo(fileinfo.FileInfo):
-    dot_net = False
+    dotnet = False
+    dotnet_flags = 0
     compile_time = 0
     export_time = 0
     resource_time = 0
@@ -34,7 +35,7 @@ class FileInfo(fileinfo.FileInfo):
         try:
             try:
                 pe = dotnetfile.DotNetPE(path)
-                self.dot_net = True
+                self.dotnet = True
             except dotnetfile.parser.CLRFormatError:
                 pe = pefile.PE(path, fast_load=True)
         except pefile.PEFormatError:
@@ -42,6 +43,11 @@ class FileInfo(fileinfo.FileInfo):
         try:
             super().__init__(path)
             self.fileformat = __name__
+            if self.dotnet:
+                self.set_module_name(pe)
+                self.set_guids(pe)
+                self.set_assembly_info(pe)
+                self.set_dotnet_flags(pe)
             self.set_fileformat(pe)
             self.set_compile_time(pe)
             self.set_export_time(pe)
@@ -51,10 +57,6 @@ class FileInfo(fileinfo.FileInfo):
             #self.time = self.get_latest_time()
             self.time = self.format_time(self.compile_time, ' ')
             self.set_pdb_filename(pe)
-            if self.dot_net:
-                self.set_module_name(pe)
-                self.set_guids(pe)
-                self.set_assembly_info(pe)
             del pe
         except Exception as e:
             print(e, file=sys.stderr)
@@ -96,6 +98,15 @@ class FileInfo(fileinfo.FileInfo):
     def get_resource_time(self):
         return self.resource_time
 
+    def set_dotnet_flags(self, pe):
+        self.dotnet_flags = 0
+        va, s = self.get_data_directory_offset(pe, 14)
+        if s > 0 and va > 0:
+            self.dotnet_flags = pe.get_dword_at_rva(va + 0x10)
+
+    def get_dotnet_flags(self):
+        return self.dotnet_flags
+
     def set_fileformat(self, pe):
         m = pe.FILE_HEADER.Machine
         if m == 0x14c:
@@ -105,9 +116,6 @@ class FileInfo(fileinfo.FileInfo):
         else:
             self.fileformat = "PE"
 
-    def is_dot_net(self):
-        return self.dot_net
-
     def set_filetype(self, pe):
         c = pe.FILE_HEADER.Characteristics
         typ = "???"
@@ -116,8 +124,11 @@ class FileInfo(fileinfo.FileInfo):
         elif c & 0x2:
             typ= "exe"
         sub = "unknown"
-        if self.is_dot_net():
-            sub = ".NET"
+        if self.dotnet:
+            if self.dotnet_flags & 0x2:
+                sub = ".NET 32bit"
+            else:
+                sub = ".NET"
         else:
             s = pe.OPTIONAL_HEADER.Subsystem
             if s == 1 or s == 8:
