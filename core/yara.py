@@ -67,6 +67,7 @@ def init_rules(folder, args):
                     mtime = st.st_mtime
                     compiled_rules[yarafile] = yara.compile(yarafile)
                     compiled_rules[yarafile].save(binfile)
+                    os.utime(yarafile, (st.st_atime, st.st_mtime))
                     os.utime(binfile, (st.st_atime, st.st_mtime))
         except Exception as e:
             print(f"Error compiling yara rules file: {e}", file=sys.stderr)

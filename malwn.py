@@ -10,7 +10,6 @@ import core.dirwalker as m_dirwalker
 import core.fileinfo as m_fileinfo
 import core.output as m_output
 import core.modules as m_modules
-
 import core.yara as m_yara
 import core.vt as m_vt
 
@@ -123,11 +122,12 @@ if __name__ == '__main__':
 
     init_config(args.reset)
 
-    m_vt.init_api(malwn_conf["vt_api_key"])
     m_output.debug_print("loading yara rules", args)
     m_yara.init_rules(malwn_conf["yara_path"], args)
     m_output.debug_print("yara rules loaded", args)
+
     m_modules.init_modules(malwn_conf["module_path"])
+    m_vt.init_api(malwn_conf["vt_api_key"])
 
     filequeue = queue.Queue()
 
