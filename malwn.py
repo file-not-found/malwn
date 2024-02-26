@@ -62,31 +62,41 @@ def fileworker():
             filequeue.task_done()
             break;
         try:
-            m_output.debug_print("processing file {}".format(file), args)
+            tid = threading.get_native_id()
+            m_output.debug_print("(TID {}) processing file {}".format(tid, file), args)
 
             fileinfo = m_fileinfo.get_fileinfo(file, args)
             if fileinfo == None:
                 filequeue.task_done()
                 continue
-            m_output.debug_print("got fileformat", args)
+            m_output.debug_print("(TID {}) got fileformat".format(tid), args)
 
             vtinfo = m_vt.get_vtinfo(fileinfo, args)
-            m_output.debug_print("got vt info", args)
+            m_output.debug_print("(TID {}) got vt info".format(tid), args)
 
             yaramatches = m_yara.get_yaramatches(fileinfo, args)
-            m_output.debug_print("got yara matches", args)
+            m_output.debug_print("(TID {}) got yara matches".format(tid), args)
             rulenames = yaramatches
 
-            compatible_modules = m_modules.get_compatible_modules(rulenames)
-            modinfo = m_modules.run(fileinfo, compatible_modules, args)
+            # dirty access to arguments from other modules to improve speed
             results[file] = {}
             results[file]["Banner"] = fileinfo.get_banner()
-            results[file]["Fileinfo"] = fileinfo.get_info()
-            results[file]["Fileinfo"]["VirusTotal"] = vtinfo
+            m_output.debug_print("(TID {}) got banner".format(tid), args)
+            results[file]["Fileinfo"] = {}
+            if 'long' in args and args.long == True:
+                results[file]["Fileinfo"] = fileinfo.get_info()
+                m_output.debug_print("(TID {}) got verbose info".format(tid), args)
+                results[file]["Fileinfo"]["VirusTotal"] = vtinfo
             results[file]["Fileinfo"]["Yara"] = yaramatches
-            results[file]["Fileinfo"]["Modules"] = modinfo
+            if ('module' in args and args.module != None) or ('allmodules' in args and args.allmodules == True):
+                compatible_modules = m_modules.get_compatible_modules(rulenames)
+                m_output.debug_print("(TID {}) got compatible modules".format(tid), args)
+                modinfo = m_modules.run(fileinfo, compatible_modules, args)
+                m_output.debug_print("(TID {}) ran compatible modules".format(tid), args)
+                results[file]["Fileinfo"]["Modules"] = modinfo
         except Exception as e:
             print(f"Error processing {file}: {e}", file=sys.stderr)
+        m_output.debug_print("(TID {}) file {} done".format(tid, file), args)
         filequeue.task_done()
 
 def add_args(parser):
@@ -113,9 +123,10 @@ if __name__ == '__main__':
 
     init_config(args.reset)
 
-    m_output.debug_print("compiling yara rules", args)
     m_vt.init_api(malwn_conf["vt_api_key"])
+    m_output.debug_print("loading yara rules", args)
     m_yara.init_rules(malwn_conf["yara_path"], args)
+    m_output.debug_print("yara rules loaded", args)
     m_modules.init_modules(malwn_conf["module_path"])
 
     filequeue = queue.Queue()

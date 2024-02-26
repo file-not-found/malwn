@@ -32,35 +32,38 @@ class FileInfo(fileinfo.FileInfo):
     assembly_info = {}
 
     def __init__(self, path):
-        try:
+        with open(path, "rb") as infile:
+            header = infile.read(2)
+        if header == b"MZ":
             try:
-                pe = dotnetfile.DotNetPE(path)
-                self.dotnet = True
-            except dotnetfile.parser.CLRFormatError:
-                pe = pefile.PE(path, fast_load=True)
-        except pefile.PEFormatError:
-            return None
-        try:
-            super().__init__(path)
-            self.fileformat = __name__
-            if self.dotnet:
-                self.set_module_name(pe)
-                self.set_guids(pe)
-                self.set_assembly_info(pe)
-                self.set_dotnet_flags(pe)
-            self.set_fileformat(pe)
-            self.set_compile_time(pe)
-            self.set_export_time(pe)
-            self.set_resource_time(pe)
-            self.set_filetype(pe)
-            self.set_export_name(pe)
-            #self.time = self.get_latest_time()
-            self.time = self.format_time(self.compile_time, ' ')
-            self.set_pdb_filename(pe)
-            del pe
-        except Exception as e:
-            print(e, file=sys.stderr)
-            return None
+                try:
+                    pe = dotnetfile.DotNetPE(path)
+                    self.dotnet = True
+                except dotnetfile.parser.CLRFormatError:
+                    pe = pefile.PE(path, fast_load=True)
+            except pefile.PEFormatError:
+                return None
+            try:
+                super().__init__(path)
+                self.fileformat = __name__
+                if self.dotnet:
+                    self.set_module_name(pe)
+                    self.set_guids(pe)
+                    self.set_assembly_info(pe)
+                    self.set_dotnet_flags(pe)
+                self.set_fileformat(pe)
+                self.set_compile_time(pe)
+                self.set_export_time(pe)
+                self.set_resource_time(pe)
+                self.set_filetype(pe)
+                self.set_export_name(pe)
+                #self.time = self.get_latest_time()
+                self.time = self.format_time(self.compile_time, ' ')
+                self.set_pdb_filename(pe)
+                del pe
+            except Exception as e:
+                print(e, file=sys.stderr)
+                return None
 
     def get_data_directory_offset(self, pe, index):
         dd = pe.OPTIONAL_HEADER.DATA_DIRECTORY
