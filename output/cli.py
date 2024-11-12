@@ -21,7 +21,5 @@ def print_result(file, info):
    
     finfo = info.get("Fileinfo")
     if finfo:
-        label = finfo.get("SHA256")
         print(f"{file}")
         obsidian_format(finfo, level=1)
-        print()

@@ -31,6 +31,7 @@ def single_print(path, result):
         print(res)
 
 def print_results(results, default_output, args):
+    first_result = True
     if args.output == '':
         args.output = default_output
     else:
@@ -46,6 +47,8 @@ def print_results(results, default_output, args):
         else:
             print_func = single_print
     for path, result in results.items():
+        if not first_result:
+            print()
         if "Fileinfo" in result and "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
             if args.nohits:
                 continue
@@ -54,6 +57,7 @@ def print_results(results, default_output, args):
         elif args.onlyhits or args.yara_rule:
             continue
         print_func(path, result)
+        first_result = False
 
 def debug_print(message, args):
     if args.debug:

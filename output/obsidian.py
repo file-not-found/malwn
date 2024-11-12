@@ -28,6 +28,4 @@ def print_result(file, info):
    
     fileinfo = info.get("Fileinfo")
     if fileinfo:
-        label = fileinfo.get("SHA256")
-        print(indent + f"- {label}:")
-        obsidian_format(fileinfo, level=2)
+        obsidian_format(fileinfo, level=0)
