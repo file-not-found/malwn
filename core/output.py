@@ -47,7 +47,7 @@ def print_results(results, default_output, args):
         else:
             print_func = single_print
     for path, result in results.items():
-        if not first_result:
+        if args.long and not first_result:
             print()
         if "Fileinfo" in result and "Yara" in result["Fileinfo"] and result["Fileinfo"]["Yara"]:
             if args.nohits:

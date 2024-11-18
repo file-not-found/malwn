@@ -1,12 +1,12 @@
 indent = ' '
 
-def obsidian_format(d, level=0):
+def cli_format(d, level=0):
     for k, v in d.items():
         if not v:
             continue
         elif type(v) == dict:
             print(indent * level + f"{k:20}")
-            obsidian_format(v, level=level+1)
+            cli_format(v, level=level+1)
         elif type(v) == list:
             l = " ".join(v)
             print(indent * level + f"{k:20}{l}")
@@ -22,4 +22,4 @@ def print_result(file, info):
     finfo = info.get("Fileinfo")
     if finfo:
         print(f"{file}")
-        obsidian_format(finfo, level=1)
+        cli_format(finfo, level=1)
