@@ -12,7 +12,7 @@ def add_args(parser):
 
 def init_modules(folder, args):
     global modules
-    if args.allmodules == False and args.module == False:
+    if args.allmodules == False and args.module == None:
         return
     if os.path.isdir(folder):
         for rulename in os.listdir(folder):
