@@ -22,9 +22,11 @@ if import_error:
 class FileInfo(fileinfo.FileInfo):
     dotnet = False
     dotnet_flags = 0
+    dotnet_r2r = False
     compile_time = 0
     export_time = 0
     resource_time = 0
+    debug_time = 0
     export_name = None
     pdb_filename = None
     module_name = None
@@ -107,6 +109,11 @@ class FileInfo(fileinfo.FileInfo):
         va, s = self.get_data_directory_offset(pe, 14)
         if s >= 0x14 and va > 0:
             self.dotnet_flags = pe.get_dword_at_rva(va + 0x10)
+            if s >= 0x48:
+                managed_native_header_rva = pe.get_dword_at_rva(va + 0x40)
+                managed_native_header_size = pe.get_dword_at_rva(va + 0x44)
+                if managed_native_header_rva != 0 and managed_native_header_size != 0:
+                    self.dotnet_r2r = True
             return True
         return False
 
@@ -132,9 +139,11 @@ class FileInfo(fileinfo.FileInfo):
         sub = "unknown"
         if self.dotnet:
             if self.dotnet_flags & 0x2:
-                sub = ".NET 32bit"
+                sub = ".NET 32b"
             else:
-                sub = ".NET"
+                sub = ".NET 64b"
+            if self.dotnet_r2r:
+                sub += " R2R"
         else:
             s = pe.OPTIONAL_HEADER.Subsystem
             if s == 1 or s == 8:
@@ -244,6 +253,8 @@ class FileInfo(fileinfo.FileInfo):
             peinfo["CompilerInfo"] = diec
         if self.pdb_filename != None:
             peinfo["PDB"] = self.pdb_filename
+        if self.debug_time != 0:
+            peinfo["DebugTimestamp"] = self.debug_time
         if self.export_time != 0:
             peinfo["ExportTimestamp"] = self.format_time(self.export_time, "")
         if self.export_name != None:
