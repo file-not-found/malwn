@@ -36,21 +36,22 @@ class FileInfo(fileinfo.FileInfo):
             header = infile.read(2)
         if header == b"MZ":
             try:
-                try:
-                    pe = dotnetfile.DotNetPE(path)
-                    self.dotnet = True
-                except dotnetfile.parser.CLRFormatError:
-                    pe = pefile.PE(path, fast_load=True)
+                pe = pefile.PE(path, fast_load=True)
             except pefile.PEFormatError:
                 return None
             try:
                 super().__init__(path)
                 self.fileformat = __name__
+                self.dotnet = self.set_dotnet_flags(pe)
                 if self.dotnet:
-                    self.set_module_name(pe)
-                    self.set_guids(pe)
-                    self.set_assembly_info(pe)
-                    self.set_dotnet_flags(pe)
+                    try:
+                        dotnetpe = dotnetfile.DotNetPE(path)
+                        self.set_module_name(dotnetpe)
+                        self.set_guids(dotnetpe)
+                        self.set_assembly_info(dotnetpe)
+                        del dotnetpe
+                    except dotnetfile.parser.CLRFormatError:
+                        pass
                 self.set_fileformat(pe)
                 self.set_compile_time(pe)
                 self.set_export_time(pe)
@@ -104,8 +105,10 @@ class FileInfo(fileinfo.FileInfo):
     def set_dotnet_flags(self, pe):
         self.dotnet_flags = 0
         va, s = self.get_data_directory_offset(pe, 14)
-        if s > 0 and va > 0:
+        if s >= 0x14 and va > 0:
             self.dotnet_flags = pe.get_dword_at_rva(va + 0x10)
+            return True
+        return False
 
     def get_dotnet_flags(self):
         return self.dotnet_flags

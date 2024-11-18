@@ -82,7 +82,7 @@ def fileworker():
             results[file]["Banner"] = fileinfo.get_banner()
             m_output.debug_print("(TID {}) got banner".format(tid), args)
             results[file]["Fileinfo"] = {}
-            if ('long' in args and args.long == True) or 'output' in args:
+            if ('long' in args and args.long == True) or ('output' in args and args.output !=''):
                 results[file]["Fileinfo"] = fileinfo.get_info()
                 m_output.debug_print("(TID {}) got verbose info".format(tid), args)
                 results[file]["Fileinfo"]["VirusTotal"] = vtinfo
