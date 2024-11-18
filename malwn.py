@@ -127,6 +127,7 @@ if __name__ == '__main__':
     m_output.debug_print("yara rules loaded", args)
 
     m_modules.init_modules(malwn_conf["module_path"])
+    m_output.debug_print("modules loaded", args)
     m_vt.init_api(malwn_conf["vt_api_key"])
 
     filequeue = queue.Queue()
@@ -135,6 +136,8 @@ if __name__ == '__main__':
         if not os.path.isfile(file):
             continue
         filequeue.put(file)
+
+    m_output.debug_print("filequeue loaded", args)
 
     m_output.debug_print("starting threads", args)
     threads = []
