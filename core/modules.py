@@ -10,8 +10,10 @@ def add_args(parser):
     parser.add_argument("-m", "--module", action="append", help="module to run")
     return parser
 
-def init_modules(folder):
+def init_modules(folder, args):
     global modules
+    if args.allmodules == False and args.module == False:
+        return
     if os.path.isdir(folder):
         for rulename in os.listdir(folder):
             p = folder + "/" + rulename

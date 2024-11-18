@@ -126,7 +126,7 @@ if __name__ == '__main__':
     m_yara.init_rules(malwn_conf["yara_path"], args)
     m_output.debug_print("yara rules loaded", args)
 
-    m_modules.init_modules(malwn_conf["module_path"])
+    m_modules.init_modules(malwn_conf["module_path"], args)
     m_output.debug_print("modules loaded", args)
     m_vt.init_api(malwn_conf["vt_api_key"])
 
