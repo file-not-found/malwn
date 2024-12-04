@@ -31,9 +31,11 @@ class FileInfo(fileinfo.FileInfo):
                 self.set_modification_date()
                 self.set_fileformat()
                 self.set_filetype()
+            else:
+                return None
         except FileNotFoundError as e:
             print(e, file=sys.stderr)
-            pass
+            return None
 
     def set_fileformat(self):
         if 'File:FileType' in self.metadata:

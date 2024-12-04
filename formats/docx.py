@@ -26,10 +26,15 @@ class FileInfo(fileinfo.FileInfo):
                     self.fileformat = __name__
                     super().__init__(path)
                     self.time = self.get_modification_date()
+                else:
+                    return None
                 self.set_fileformat()
                 self.set_filetype()
-        except:
-            pass
+            else:
+                return None
+        except Exception as e:
+            print(e, file=sys.stderr)
+            return None
 
     def set_fileformat(self):
         with self.zipfile.open("[Content_Types].xml") as xmlfile:
