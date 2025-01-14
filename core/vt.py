@@ -12,24 +12,24 @@ def init_api(key):
             'x-apikey': key,
         }
     else:
-        print(f"Error: invalid VirusTotal API key length", file=sys.stderr)
+        print("Error: invalid VirusTotal API key length", file=sys.stderr)
 
 def add_args(parser):
-   parser.add_argument("--vt", default=False, action="store_true", help="check virustotal")
-   return parser
+    parser.add_argument("--vt", default=False, action="store_true", help="check virustotal")
+    return parser
 
 def get_vtinfo(fileinfo, args):
     vtinfo = {}
     if args.vt and headers != {}:
         hashsum = fileinfo.get_info()["SHA256"]
         report = get_report(hashsum)
-        if report == None:
+        if report is None:
             return None
         elif report == '':
             vtinfo['Detection'] = 'Not Found'
         else:
             date = get_first_submission_date(report)
-            if date != None:
+            if date is not None:
                 first_submission = get_submission(hashsum, date)
             vtinfo = extract_values(report, first_submission)
             if 'Filename' in vtinfo:
@@ -46,7 +46,7 @@ def get_report(h):
         return response.text
     elif response.status_code == 401:
         headers = {}
-        print(f"Error: invalid VirusTotal API key", file=sys.stderr)
+        print("Error: invalid VirusTotal API key", file=sys.stderr)
         return None
     return ''
 
@@ -67,10 +67,10 @@ def extract_values(report, submission):
     if 'city' in submission_attributes and submission_attributes['city'] != '?':
         info['SubmitterCity'] = submission_attributes['city']
     if 'last_analysis_stats' in report_attributes \
-    and 'harmless' in report_attributes['last_analysis_stats'] \
-    and 'undetected' in report_attributes['last_analysis_stats'] \
-    and 'suspicious' in report_attributes['last_analysis_stats'] \
-    and 'malicious' in report_attributes['last_analysis_stats']:
+            and 'harmless' in report_attributes['last_analysis_stats'] \
+            and 'undetected' in report_attributes['last_analysis_stats'] \
+            and 'suspicious' in report_attributes['last_analysis_stats'] \
+            and 'malicious' in report_attributes['last_analysis_stats']:
         h = int(report_attributes['last_analysis_stats']['harmless']) + int(report_attributes['last_analysis_stats']['undetected']) 
         m = int(report_attributes['last_analysis_stats']['suspicious']) + int(report_attributes['last_analysis_stats']['malicious']) 
         info['Detection'] = '{}/{}'.format(m, h+m)
