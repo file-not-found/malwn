@@ -49,7 +49,7 @@ class FileInfo(fileinfo.FileInfo):
                     try:
                         dotnetpe = dotnetfile.DotNetPE(path)
                         self.set_module_name(dotnetpe)
-                        self.set_guids(dotnetpe)
+                        self.set_guids(pe)
                         self.set_assembly_info(dotnetpe)
                         del dotnetpe
                     except dotnetfile.parser.CLRFormatError:
@@ -106,12 +106,15 @@ class FileInfo(fileinfo.FileInfo):
 
     def set_dotnet_flags(self, pe):
         self.dotnet_flags = 0
-        va, s = self.get_data_directory_offset(pe, 14)
-        if s >= 0x14 and va > 0:
-            self.dotnet_flags = pe.get_dword_at_rva(va + 0x10)
-            if s >= 0x48:
-                managed_native_header_rva = pe.get_dword_at_rva(va + 0x40)
-                managed_native_header_size = pe.get_dword_at_rva(va + 0x44)
+        clr_header_va, clr_header_size = self.get_data_directory_offset(pe, 14)
+        if clr_header_size >= 0x2c and clr_header_va > 0:
+            #metadata_rva = pe.get_dword_at_rva(clr_header_va + 0x8)
+            #metadata_size = pe.get_dword_at_rva(clr_header_va + 0xC)
+            #metadata = pe.get_data(metadata_rva, metadata_size)
+            self.dotnet_flags = pe.get_dword_at_rva(clr_header_va + 0x10)
+            if clr_header_size >= 0x48:
+                managed_native_header_rva = pe.get_dword_at_rva(clr_header_va + 0x40)
+                managed_native_header_size = pe.get_dword_at_rva(clr_header_va + 0x44)
                 if managed_native_header_rva != 0 and managed_native_header_size != 0:
                     self.dotnet_r2r = True
             return True
@@ -215,13 +218,13 @@ class FileInfo(fileinfo.FileInfo):
             self.assembly_info["MSBuildVersion"] = msbuild_version[0][14:-1].decode('utf-8')
 
 
-    def set_guids(self, dotnetpe):
+    def set_guids(self, pe):
         self.guids = []
         guid_pattern = re.compile(
             rb'\x29\x01\x00\x24[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\x00'
         )
 
-        guids = re.findall(guid_pattern, dotnetpe.__data__)
+        guids = re.findall(guid_pattern, pe.__data__)
         if len(guids) > 0:
             self.guids = [guid[4:-1].decode('utf-8') for guid in guids]
 
